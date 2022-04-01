@@ -8,6 +8,7 @@
 	1. [GitOps](#gitops)
 		1. [¿Qué es GitOps?](#¿que-es-gitops?)
 		2. [Principios de GitOps](#principio-de-gitops)
+		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 4. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 5. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 6. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -37,6 +38,7 @@ Las IaC, como Ansible o Terraform, nos permiten ahorrar tiempo a la hora de desp
 
 Con GitOps, podremos usar determinados agentes para que nos informen de cualquier **divergencia** que exista entre el código almacenado en Git y el que se está ejecutando en los clústeres. Si se encuentra alguna diferencia, los reconciliadores de Kubernetes se encargan de actualizar o hacer un *rollback* en el cluster.
 
+<br>
 
 #### Principios de GitOps
 
@@ -48,12 +50,23 @@ La metodología GitOps sigue estos cuatro principios:
 
 3. **Los cambios aprobados se aplican automáticamente al sistema**: una vez se ha declarado el código en Git, el siguiente paso es permitir que cualquier cambio que hagamos ahí se aplique de forma automática en el sistema. La clave de esto es que no necesitamos usar las credenciales del cluster para cambiar el sistema, bastará con realizar un "commit" o un "pull request".
 
-4. **Uso de agentes para asegurar la corrección y las alertas de divergencia**: ya declarada la infraestructura y almacenada en un sistema de control de versiones, los agentes nos informarán de cualquier estado que se aleje de nuestras expectativas. 	
+4. **Uso de agentes para asegurar la corrección y las alertas de divergencia**: ya declarada la infraestructura y almacenada en un sistema de control de versiones, los agentes nos informarán de cualquier estado que se aleje de nuestras expectativas. El uso de agentes también nos asegura la autocorrección del sistema en el caso de que se produzca un error humano, en cuyo caso el agente tratará de aplicar sus propias soluciones (como volver a desplegar la aplicación) para recuperar el estado deseado.
 
+<br>
 
- En el caso de este proyecto, utilizaremos un repositorio de GitHub para alojar las definiciones (es decir, el código) de todos los elementos que conformen nuestra aplicación web, lo que nos permitirá mantener un control de versiones. Cualquier cambio que hagamos en el código de dicho repositorio se reflejará en nuestra infraestructura de Kubernetes.
+#### Ventajas e inconvenientes de GitOps
 
-Pues bien, **ArgoCD** es una herramienta declarativa de despliegue continuo de aplicaciones en Kubernetes, que, siguiendo la estrategia de GitOps, emplea repositorios de GitHub como única fuente para definir el estado de la aplicación. En otras palabras, ArgoCD automatiza el despliegue de los diferentes estados de una aplicación en un entorno específico. Además, esta herramienta permite monitorizar las aplicaciones y comparar el estado en tiempo real del proyecto con el contenido del repositorio de GitHub, con lo cual informará al usuario de las diferencias que existan entre ambos entornos y tratará de sincronizar la aplicación de manera automática.
+Este es el proceso que se realiza en un despliegue tradicional **sin GitOps**:
+
+1. El desarrollador guarda los cambios en el código fuente de la aplicación.
+2. Un sistema de integración continua construye la aplicación, y puede llegar a realizar otras tareas, como pruebas unitarias, escaneos de seguridad, verificaciones de estado, etc.
+3. La imagen del contenedor se almacena de un registro de contenedores.
+4. La plataforma de IC (u otro sistema externo) con acceso directo al cluster de Kubernetes crea un despliegue usando una variación del comando "kubectl apply".
+5. La aplicación se despliega en el cluster.
+
+<center>
+<img src="images/ProcesoDespliegueSinGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+</center>
 
 <br>
 
