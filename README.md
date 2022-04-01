@@ -72,6 +72,37 @@ Este es el proceso que se realiza en un despliegue tradicional **sin GitOps**:
 <img src="images/ProcesoDespliegueSinGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
 </p>
 
+Aspectos a destacar de este proceso:
+
+* El estado del cluster se decide de forma **manual** mediante comandos de kubectl o accesos API.
+* La plataforma que despliega el cluster de Kubernetes tiene **total acceso** a este desde un punto externo.
+
+GitOps nos permite modificar el proceso para que sea como sigue:
+
+1. Los primeros pasos son los mismos: el desarrollador aplica los cambios del código fuente, y el sistema de IC crea un despliegue que se guarda en un registro.
+2. Nadie tiene acceso directo al cluster de Kubernetes, y hay un segundo repositorio Git con todas las declaraciones que definen la aplicación.
+3. Otra persona o un sistema automatizado cambia las declaraciones en el segundo repositorio Git.
+4. Un controlador de GitOps que se ejecuta dentro del cluster monitoriza el repositorio Git y modifica el estado del cluster tan pronto se aplique un cambio, para hacer coincidir dicho estado con el que se describe en Git.
+
+<p align="center">
+<img src="images/ProcesoDespliegueSinGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+</p>
+
+Aspectos a destacar de este proceso:
+
+* El estado del cluster siempre se describe en **Git**, donde se almacena todo lo que forma parte de la aplicación.
+* No hay ningún sistema de despliegue externo con total acceso al cluster. Es el **propio cluster** el que obtiene los cambios y la información del despliegue.
+* El controlador de GitOps se ejecuta en un bucle constante que sincroniza el estado del repositorio Git con el del cluster.
+
+De esto podemos deducir que GitOps ofrece las siguientes ventajas:
+
+* Una mayor productividad, al reducir el trabajo humano.
+* Una experiencia de desarrollo mejorada, al facilitarle las tareas al desarrollador.
+* Una mayor estabilidad, ya que Git ofrece un registro más completo de todos los cambios realizados.
+* Una mayor fiabilidad, puesto que siempre se puede dar marcha atras con un rollback en el caso de que algo salga mal.
+* Consistencia y estandarización, porque GitOps ofrece un modelo para desarrollar infraestructuras, aplicaciones y cambios adicionales en Kubernetes de principio a fin.
+* Una mayor garantía de seguridad, tanto en la integración de los datos como a la hora de probar la autoría y origen de los mismos.
+
 <br>
 
 ## Desarrollo del proyecto
