@@ -85,7 +85,7 @@ GitOps nos permite modificar el proceso para que sea como sigue:
 4. Un controlador de GitOps que se ejecuta dentro del cluster monitoriza el repositorio Git y modifica el estado del cluster tan pronto se aplique un cambio, para hacer coincidir dicho estado con el que se describe en Git.
 
 <p align="center">
-<img src="images/ProcesoDespliegueSinGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+<img src="images/ProcesoDespliegueConGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
 </p>
 
 Aspectos a destacar de este proceso:
