@@ -2,20 +2,21 @@
 
 ## Tabla de contenidos
 
-1. [Objetivos del proyecto](#objetivos-del-proyecto)
-2. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realizacion-del-proyecto)
+1. [Introducción](#introduccion)
+2. [Objetivos del proyecto](#objetivos-del-proyecto)
 3. [Fundamentos teóricos y conceptos previos](#fundamentos-teoricos-y-conceptos-previos)
 	1. [GitOps](#gitops)
 		1. [¿Qué es GitOps?](#¿que-es-gitops?)
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
-4. [Desarrollo del proyecto](#desarrollo-del-proyecto)
-5. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
-6. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
-7. [Bibliografía](#bibliografia)
+4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realizacion-del-proyecto)
+5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
+6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
+7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
+8. [Bibliografía](#bibliografia)
 
-<br>
+-------------------------------------------------------------------------
 
 ## Objetivos del proyecto
 
