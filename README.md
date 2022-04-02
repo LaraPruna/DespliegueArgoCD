@@ -9,6 +9,7 @@
 		1. [¿Qué es GitOps?](#¿que-es-gitops?)
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
+	2. [ArgoCD](#argocd)
 4. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 5. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 6. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -92,9 +93,9 @@ Aspectos a destacar de este proceso:
 
 * El estado del cluster siempre se describe en **Git**, donde se almacena todo lo que forma parte de la aplicación.
 * No hay ningún sistema de despliegue externo con total acceso al cluster. Es el **propio cluster** el que obtiene los cambios y la información del despliegue.
-* El controlador de GitOps se ejecuta en un bucle constante que sincroniza el estado del repositorio Git con el del cluster.
+* El controlador de GitOps se ejecuta en un **bucle constante** que sincroniza el estado del repositorio Git con el del cluster.
 
-De esto podemos deducir que GitOps ofrece las siguientes ventajas:
+De esto podemos deducir que GitOps ofrece las siguientes **ventajas**:
 
 * Una mayor productividad, al reducir el trabajo humano.
 * Una experiencia de desarrollo mejorada, al facilitarle las tareas al desarrollador.
@@ -102,6 +103,24 @@ De esto podemos deducir que GitOps ofrece las siguientes ventajas:
 * Una mayor fiabilidad, puesto que siempre se puede dar marcha atras con un rollback en el caso de que algo salga mal.
 * Consistencia y estandarización, porque GitOps ofrece un modelo para desarrollar infraestructuras, aplicaciones y cambios adicionales en Kubernetes de principio a fin.
 * Una mayor garantía de seguridad, tanto en la integración de los datos como a la hora de probar la autoría y origen de los mismos.
+
+Hay que mencionar que no todo es oro en GitOps: el almacenamiento de **objetos de tipo *Secret*** en Git supone un problema, puesto que este valor suele codificarse (que no encriptarse) en base64, lo cual resulta muy fácil de descodificar. No obstante, algunas empresas le han dado solución a este problema, como los *Sealed Secrets* de Bitnami, que encriptan los *Secrets* para que sea seguro almacenarlos en Git.
+
+<br>
+
+### ArgoCD
+
+ArgoCD, perteneciente a la Cloud Native Computing Foundation (CNCF), es una de las herramientas más populares actualmente (y de las primeras que apareció en el mercado) para desplegar de forma continua aplicaciones en Kubernetes y con base de GitOps. No solo se la conoce por su excelente **administración y despliegue de aplicaciones de Kubernetes**, sino también por sus funciones de autocorrección de errores, gestión de acceso de usuarios, verificación de estado, etc. ArgoCD implementa todos los principios de GitOps que hemos descrito antes de la siguiente manera:
+
+1. Instalamos Argo CD como un controlador en el cluster de Kubernetes. Normalmente, lo instalaremos en el mismo cluster que va a gestionar, aunque también puede administrar otros clústeres externos.
+2. Almacenamos las declaraciones en Git, sean del tipo que sean. ArgoCD es bastante abierto a este respecto, soporta tanto declaraciones simples de Kubernetes como *charts* de Helm, definiciones de Kustomize y otros sistemas de plantillas.
+3. Creamos una aplicación en ArgoCD indicando qué repositorio Git va a monitorizar, y en qué cluster o espacio de nombre deberá instalarse dicha aplicación.
+4. Desde este momento, ArgoCD monitorizará el repositorio de Git, y cuando haya algún cambio, modificará el cluster de forma automática para que tenga el mismo estado.
+5. De manera opcional, ArgoCD desplegará aplicaciones en otros clústeres (no solo en el que se encuentra instalado).
+
+<p align="center">
+<img src="images/ProcesoArgoCD.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+</p>
 
 <br>
 
@@ -123,10 +142,12 @@ AnAr Solutions. (2021, 11 noviembre). Compare Infrastructure as Code - IaC vs Gi
 
 Andrada Prieto, J. (s. f.). ¿Qué es GITOPS? Viewnext. Recuperado 15 de marzo de 2022, de https://www.viewnext.com/que-es-gitops/
 
+Dubey, A. (2022, 20 enero). All About ArgoCD, A Beginner’s Guide. DEV Community. Recuperado 2 de abril de 2022, de https://dev.to/abhinavd26/all-about-argocd-a-beginners-guide-33c9Jerez, Á. G. (2020, 29 mayo).
+
+Implementando GitOps con ArgoCD. Adictos al trabajo. Recuperado 2 de abril de 2022, de https://www.adictosaltrabajo.com/2020/05/25/implementando-gitops-con-argocd/
+
 Lingeswaran, R. (2021, 26 junio). GitOps vs Infrastructure as Code. UnixArena. Recuperado 15 de marzo de 2022, de https://www.unixarena.com/2021/06/gitops-vs-infrastructure-as-code.html/
 
 Weaveworks. (s. f.). GitOps what you need to know. Recuperado 15 de marzo de 2022, de https://www.weave.works/technologies/gitops/
 
 Weaveworks. (2022, 8 marzo). The Evolution of Configuration Management: IaC vs GitOps. Recuperado 16 de marzo de 2022, de https://www.weave.works/blog/evolution-configuration-management-iac-vs-gitops
-
-https://www.adictosaltrabajo.com/2020/05/25/implementando-gitops-con-argocd/
