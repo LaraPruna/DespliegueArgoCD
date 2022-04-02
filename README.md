@@ -86,7 +86,7 @@ GitOps nos permite modificar el proceso para que sea como sigue:
 4. Un controlador de GitOps que se ejecuta dentro del cluster monitoriza el repositorio Git y modifica el estado del cluster tan pronto se aplique un cambio, para hacer coincidir dicho estado con el que se describe en Git.
 
 <p align="center">
-<img src="images/ProcesoDespliegueConGitOps.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+<img src="images/ProcesoDespliegueConGitOps.png" alt="Proceso de despliegue con GitOps" width="750"/>
 </p>
 
 Aspectos a destacar de este proceso:
@@ -119,8 +119,22 @@ ArgoCD, perteneciente a la Cloud Native Computing Foundation (CNCF), es una de l
 5. De manera opcional, ArgoCD desplegará aplicaciones en otros clústeres (no solo en el que se encuentra instalado).
 
 <p align="center">
-<img src="images/ProcesoArgoCD.png" alt="Proceso de despliegue sin GitOps" width="750"/>
+<img src="images/ProcesoArgoCD.png" alt="Proceso de ArgoCD" width="750"/>
 </p>
+
+Este es el proceso básico de despliegue de ArgoCD, pero también cuenta con otras características (que describiremos más adelante), como:
+
+* Sincronización manual o automática
+* Definición de oleadas y marcos de sincronización (Sync Waves y Sync Windows, respectivamente)
+* Configuración declarativa de aplicaciones
+
+Argo CD cuenta con una interfaz gráfica integrada donde se muestra tanto la estructura de la aplicación como estado de la sincronización.
+
+<p align="center">
+<img src="images/InterfazGrafica.png" alt="Interfaz gráfica de ArgoCD" width="750"/>
+</p>
+
+
 
 <br>
 
