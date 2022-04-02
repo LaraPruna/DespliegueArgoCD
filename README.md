@@ -18,11 +18,11 @@
 
 -------------------------------------------------------------------------
 
-## Objetivos del proyecto
+## Introducción
 
 <br>
 
-## Escenario necesario para la realización del proyecto
+## Objetivos del proyecto
 
 <br>
 
@@ -136,6 +136,10 @@ Argo CD cuenta con una interfaz gráfica integrada donde se muestra tanto la est
 </p>
 
 
+
+<br>
+
+## Escenario necesario para la realización del proyecto
 
 <br>
 
