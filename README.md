@@ -125,7 +125,7 @@ ArgoCD, perteneciente a la Cloud Native Computing Foundation (CNCF), es una de l
 Este es el proceso básico de despliegue de ArgoCD, pero también cuenta con otras características (que describiremos más adelante), como:
 
 * Sincronización manual o automática
-* Definición de oleadas y marcos de sincronización (Sync Waves y Sync Windows, respectivamente)
+* Definición de oleadas y marcos de sincronización (*Sync Waves* y *Sync Windows*, respectivamente)
 * Configuración declarativa de aplicaciones
 
 Argo CD cuenta con una interfaz gráfica integrada donde se muestra tanto la estructura de la aplicación como estado de la sincronización.
