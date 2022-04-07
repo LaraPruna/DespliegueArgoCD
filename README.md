@@ -129,17 +129,37 @@ Este es el proceso básico de despliegue de ArgoCD, pero también cuenta con otr
 * Definición de oleadas y marcos de sincronización (*Sync Waves* y *Sync Windows*, respectivamente)
 * Configuración declarativa de aplicaciones
 
-Argo CD cuenta con una interfaz gráfica integrada donde se muestra tanto la estructura de la aplicación como estado de la sincronización.
+Argo CD cuenta con una **interfaz gráfica integrada** clara y fácil de administrar, donde se muestra tanto la estructura de la aplicación como estado de la sincronización. Tras desplegarla, ArgoCD irá realizando *pulls* a los repositorios añadidos para comparar el estado de estos con el de los clústeres.
 
 <p align="center">
 <img src="images/InterfazGrafica.png" alt="Interfaz gráfica de ArgoCD" width="750"/>
 </p>
 
-
+Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json**, sino también herramientas como **Helm, Kustomize, Ksonnet**, etc. Permite la **autenticación** mediante OICD, OAuth2, LDAP, SAML 2.0, Github, GitLab, Microsoft, etc., y emplea una política basada en roles. En cuanto a la gestión de ***Secrets***, ArgoCD es compatible con Bitnami Sealed Secrets, Godaddy K8S External Secrets, Vault, Banzai Cloud Bank Vaults, Helm Secrets, Kustomize Secrets y AWS Secret Operator.
 
 <br>
 
 ## Escenario necesario para la realización del proyecto
+
+En este apartado describiremos el proceso de instalación de ArgoCD para poder desplegar posteriormente nuestra aplicación. Existen varias formas de instalarlo en un cluster de Kubernetes:
+
+### Instalación normal mediante definiciones en yaml
+
+Si solo queremos ArgoCD para hacer pruebas y experimentar con la herramienta, podemos desplegar ArgoCD directamente con el fichero install.yaml que nos ofrece ArgoCD en su [repositorio de GitHub](https://github.com/argoproj/argo-cd/tree/master/manifests). Creamos un espacio de nombre y aplicamos dicho archivo en el mismo.
+```
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-install.yaml", con el que instalaremos ArgoCD como en el caso anterior. La única diferencia es que este está pensado para entornos con muchos usuarios repartidos entre diferentes equipos y proyectos, entre los cuales se han dividido los recursos del cluster mediante el uso de **espacios de nombre**. En este sentido, namespace-install.yaml permite instalar ArgoCD en un espacio de nombre concreto, y no requiere que tengamos privilegios a nivel de cluster. Esta es la mejor opción si queremos instalar ArgoCD en un solo cluster pero que también pueda gestionar otros externos.
+
+<br>
+
+### Autopilot
+
+Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, crea un repositorio (o un directorio en uno que ya exista) de GitOps para que se gestione a sí misma.
+
+Una vez instalado ArgoCD, ya podremos crear nuestros proyectos y aplicaciones con esta misma herramienta, que guardará todas las definiciones en el repositorio creado. Por su parte, ArgoCD notará los cambios en dicho repositorio y los aplicará al cluster, dando lugar a un proceso de despliegue continuo.  
 
 <br>
 
