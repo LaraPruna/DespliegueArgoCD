@@ -163,9 +163,90 @@ En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-
 <img src="images/argo_autopilot.png" alt="ArgoCD en piloto automático" width="450"/>
 </p>
 
-Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, crea un repositorio (o un directorio en uno que ya exista) de GitOps para que se gestione a sí misma.
+Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, guarda toda la configuración en un repositorio de GitOps para que se gestione a sí misma. Una vez instalado ArgoCD, ya podremos crear nuestros proyectos y aplicaciones con esta misma herramienta, que guardará todas las definiciones en el repositorio creado. Por su parte, ArgoCD notará los cambios en dicho repositorio y los aplicará al cluster, dando lugar a un proceso de despliegue continuo.
 
-Una vez instalado ArgoCD, ya podremos crear nuestros proyectos y aplicaciones con esta misma herramienta, que guardará todas las definiciones en el repositorio creado. Por su parte, ArgoCD notará los cambios en dicho repositorio y los aplicará al cluster, dando lugar a un proceso de despliegue continuo.
+Para instalar Autopilot en Linux, podemos usar varias herramientas:
+
+* **brew**, con el que ejecutaremos un único comando:
+
+```
+brew install argocd-autopilot
+```
+
+* **curl**, con el que podemos bajarnos la última versión de Autopilot directamente desde el repositorio oficial:
+
+```
+# Guardamos en una variable la última versión de Autopilot
+VERSION=$(curl --silent "https://api.github.com/repos/argoproj-labs/argocd-autopilot/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+
+# Nos descargamos el paquete .tar.gz de dicha versión y extraemos el binario de instalación
+curl -L --output - https://github.com/argoproj-labs/argocd-autopilot/releases/download/$VERSION/argocd-autopilot-linux-amd64.tar.gz | tar zx
+
+# Movemos el comando a nuestro directorio de binarios
+mv ./argocd-autopilot-* /usr/local/bin/argocd-autopilot
+
+# Ya tendremos instalado Autopilot, con el siguiente comando podremos ver la ayuda para empezar a usarlo
+argocd-autopilot help
+```
+
+* También podemos utilizar una **imagen de Docker**, especificando las rutas en las que vamos a montar los directorios .kube y .gitconfig:
+
+```
+docker run \
+  -v ~/.kube:/home/autopilot/.kube \
+  -v ~/.gitconfig:/home/autopilot/.gitconfig \
+  -it quay.io/argoprojlabs/argocd-autopilot <cmd> <flags>
+```
+
+En las dos últimas etiquetas, indicaremos los comandos que queremos ejecutar con la herramienta Autopilot, que en principio serán los necesarios para instalar ArgoCD y el controlador de aplicaciones, así como para crear nuestro primer proyecto.
+
+Una vez tengamos instalado Autopilot, el siguiente paso será crear un **token de Git** para Autopilot. Para ello, nos vamos a los ajustes de nuestra cuenta de GitHub, y entramos en la pestaña "Ajustes de desarrollador" > "Tokens de acceso personal", y generamos un nuevo token. Le damos un nombre e indicamos el periodo de validez y los permisos que queremos darle (en este caso, bastaría con marcar la casilla "repo", puesto que lo que va a hacer Autopilot principalmente es crear y modificar repositorios). 
+
+<p align="center">
+<img src="images/NewPersonalAccessToken.png" alt="ArgoCD en piloto automático" width="750"/>
+</p>
+
+Nota: es importante que copiemos el token antes de salir de la página, ya que no podremos volver a verlo.
+
+Hecho esto, crearemos un repositorio en GitHub para Autopilot (también podemos dejar que sea Autopilot quien lo cree), y generaremos dos variables de entorno en la máquina donde lo tengamos instalado:
+```
+# Nuestro token de Git
+export GIT_TOKEN=ghp_d3nrpZHPTCGAOYBZop1VDCBDHQVgTj0OYxPu
+
+# La URL de nuestro repositorio
+export GIT_REPO=https://github.com/LaraPruna/autopilot.git
+```
+
+A continuación, ejecutamos el arranque de instalación en nuestro entorno de Kubernetes, con lo que se instalará ArgoCD y el controlador de aplicaciones.
+```
+argocd-autopilot repo bootstrap
+```
+
+Con esto, se nos habrá creado el [repositorio](https://github.com/LaraPruna/autopilot) (si no existía ya) con tres directorios: apps, bootstrap y projects. También se nos indicará al final de la instalación el usuario y la contraseña para acceder a ArgoCD y el comando que necesitamos para realizar un *port-forward*:
+```
+INFO pushing bootstrap manifests to repo          
+Resolving deltas: 100% (1/1), done.
+INFO applying argo-cd bootstrap application       
+application.argoproj.io/autopilot-bootstrap created
+INFO running argocd login to initialize argocd config 
+'admin:login' logged in successfully
+Context 'autopilot' updated
+
+INFO argocd initialized. password: **************** 
+INFO run:
+
+    kubectl port-forward -n argocd svc/argocd-server 8080:80
+```
+
+<p align="center">
+<img src="images/PortalArgoCD.png" alt="Portal de ArgoCD" width="750"/>
+<img src="images/PortalArgoCD2.png" alt="Proyectos de Autopilot en ArgoCD" width="750"/>
+</p>
+
+Lo siguiente será crear nuestro primer proyecto:
+```
+argocd-autopilot project create mi-primer-proyecto
+```
 
 <br>
 
