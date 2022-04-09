@@ -11,6 +11,8 @@
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realizacion-del-proyecto)
+	1. [Instalación de ArgoCD mediante declaraciones](#instalacion-de-argocd-mediante-declaraciones)
+	2. [Instalación de ArgoCD mediante Autopilot](#instalacion-de-argocd-mediante-autopilot)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -143,7 +145,7 @@ Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json
 
 En este apartado describiremos el proceso de instalación de ArgoCD para poder desplegar posteriormente nuestra aplicación. Existen varias formas de instalarlo en un cluster de Kubernetes:
 
-### Instalación normal mediante definiciones en yaml
+### Instalación de ArgoCD mediante declaraciones
 
 Si solo queremos ArgoCD para hacer pruebas y experimentar con la herramienta, podemos desplegar ArgoCD directamente con el fichero install.yaml que nos ofrece ArgoCD en su [repositorio de GitHub](https://github.com/argoproj/argo-cd/tree/master/manifests). Creamos un espacio de nombre y aplicamos dicho archivo en el mismo.
 ```
@@ -155,11 +157,15 @@ En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-
 
 <br>
 
-### Autopilot
+### Instalación de ArgoCD mediante Autopilot
+
+<p align="center">
+<img src="images/argocd-autopilot.png" alt="ArgoCD en piloto automático" width="500"/>
+</p>
 
 Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, crea un repositorio (o un directorio en uno que ya exista) de GitOps para que se gestione a sí misma.
 
-Una vez instalado ArgoCD, ya podremos crear nuestros proyectos y aplicaciones con esta misma herramienta, que guardará todas las definiciones en el repositorio creado. Por su parte, ArgoCD notará los cambios en dicho repositorio y los aplicará al cluster, dando lugar a un proceso de despliegue continuo.  
+Una vez instalado ArgoCD, ya podremos crear nuestros proyectos y aplicaciones con esta misma herramienta, que guardará todas las definiciones en el repositorio creado. Por su parte, ArgoCD notará los cambios en dicho repositorio y los aplicará al cluster, dando lugar a un proceso de despliegue continuo.
 
 <br>
 
