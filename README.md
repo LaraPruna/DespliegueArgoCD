@@ -160,7 +160,7 @@ En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-
 ### Instalación de ArgoCD mediante Autopilot
 
 <p align="center">
-<img src="images/argocd_autopilot.png" alt="ArgoCD en piloto automático" width="500"/>
+<img src="images/argo_autopilot.png" alt="ArgoCD en piloto automático" width="500"/>
 </p>
 
 Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, crea un repositorio (o un directorio en uno que ya exista) de GitOps para que se gestione a sí misma.
