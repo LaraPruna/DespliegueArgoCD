@@ -10,9 +10,9 @@
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
-4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realizacion-del-proyecto)
-	1. [Instalación de ArgoCD mediante declaraciones](#instalacion-de-argocd-mediante-declaraciones)
-	2. [Instalación de ArgoCD mediante Autopilot](#instalacion-de-argocd-mediante-autopilot)
+4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
+	1. [Instalación de ArgoCD mediante declaraciones](#instalación-de-argocd-mediante-declaraciones)
+	2. [Instalación de ArgoCD mediante Autopilot](#instalación-de-argocd-mediante-autopilot)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -160,7 +160,7 @@ En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-
 ### Instalación de ArgoCD mediante Autopilot
 
 <p align="center">
-<img src="images/argo_autopilot.png" alt="ArgoCD en piloto automático" width="500"/>
+<img src="images/argo_autopilot.png" alt="ArgoCD en piloto automático" width="450"/>
 </p>
 
 Si queremos trabajar directamente en un entorno de producción, tenemos a nuestra disposición la herramienta [Autopilot](https://github.com/argoproj-labs/argocd-autopilot), que además de instalar la propia aplicación de ArgoCD y desplegarla en un cluster de Kubernetes, crea un repositorio (o un directorio en uno que ya exista) de GitOps para que se gestione a sí misma.
