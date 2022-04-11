@@ -362,7 +362,7 @@ Si nos vamos a la interfaz gráfica de ArgoCD, veremos que nos aparece la aplica
 En el repositorio de Autopilot también se nos habrá añadido un nuevo directorio para la app:
 
 <p align="center">
-<img src="images/demoapp-git.png" alt="Nueva app en GitOps" width="500"/>
+<img src="images/demoapp-git.png" alt="Nueva app en GitOps" width="750"/>
 </p>
 
 Para desinstalar Autopilot, usamos el argumento `uninstall`, con el que se borrarán el repositorio donde hemos guardado la herramienta y los recursos del mismo en el cluster de Kubernetes.
