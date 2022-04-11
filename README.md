@@ -11,8 +11,9 @@
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
-	1. [Instalación de ArgoCD mediante declaraciones](#instalación-de-argocd-mediante-declaraciones)
-	2. [Instalación de ArgoCD mediante Autopilot](#instalación-de-argocd-mediante-autopilot)
+	1. [Instalación de ArgoCD con declaraciones](#instalación-de-argocd-con-declaraciones)
+	2. [Instalación de ArgoCD con Autopilot](#instalación-de-argocd-con-autopilot)
+	3. [Instalación de ArgoCD con Helm](#instalación-de-argocd-con-helm)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -145,19 +146,113 @@ Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json
 
 En este apartado describiremos el proceso de instalación de ArgoCD para poder desplegar posteriormente nuestra aplicación. Existen varias formas de instalarlo en un cluster de Kubernetes:
 
-### Instalación de ArgoCD mediante declaraciones
+### Instalación de ArgoCD con declaraciones
 
 Si solo queremos ArgoCD para hacer pruebas y experimentar con la herramienta, podemos desplegar ArgoCD directamente con el fichero install.yaml que nos ofrece ArgoCD en su [repositorio de GitHub](https://github.com/argoproj/argo-cd/tree/master/manifests). Creamos un espacio de nombre y aplicamos dicho archivo en el mismo.
 ```
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+lpruna@debian:~$ kubectl create namespace argocd
+lpruna@debian:~$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+lpruna@debian:~$ kubectl get all -n argocd
+NAME                                                    READY   STATUS    RESTARTS   AGE
+pod/argocd-application-controller-0                     1/1     Running   0          101s
+pod/argocd-applicationset-controller-79f97597cb-p2g4l   1/1     Running   0          102s
+pod/argocd-dex-server-6fd8b59f5b-4p2jf                  1/1     Running   0          102s
+pod/argocd-notifications-controller-5549f47758-xsm4m    1/1     Running   0          102s
+pod/argocd-redis-79bdbdf78f-x4868                       1/1     Running   0          102s
+pod/argocd-repo-server-5569c7b657-zn9ql                 1/1     Running   0          102s
+pod/argocd-server-664b7c6878-l7vlm                      1/1     Running   0          101s
+
+NAME                                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+service/argocd-applicationset-controller          ClusterIP   10.103.132.210   <none>        7000/TCP                     102s
+service/argocd-dex-server                         ClusterIP   10.98.252.112    <none>        5556/TCP,5557/TCP,5558/TCP   102s
+service/argocd-metrics                            ClusterIP   10.104.107.166   <none>        8082/TCP                     102s
+service/argocd-notifications-controller-metrics   ClusterIP   10.103.223.62    <none>        9001/TCP                     102s
+service/argocd-redis                              ClusterIP   10.110.177.243   <none>        6379/TCP                     102s
+service/argocd-repo-server                        ClusterIP   10.107.77.98     <none>        8081/TCP,8084/TCP            102s
+service/argocd-server                             ClusterIP   10.110.54.94     <none>        80/TCP,443/TCP               102s
+service/argocd-server-metrics                     ClusterIP   10.103.70.41     <none>        8083/TCP                     102s
+
+NAME                                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/argocd-applicationset-controller   1/1     1            1           102s
+deployment.apps/argocd-dex-server                  1/1     1            1           102s
+deployment.apps/argocd-notifications-controller    1/1     1            1           102s
+deployment.apps/argocd-redis                       1/1     1            1           102s
+deployment.apps/argocd-repo-server                 1/1     1            1           102s
+deployment.apps/argocd-server                      1/1     1            1           102s
+
+NAME                                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/argocd-applicationset-controller-79f97597cb   1         1         1       102s
+replicaset.apps/argocd-dex-server-6fd8b59f5b                  1         1         1       102s
+replicaset.apps/argocd-notifications-controller-5549f47758    1         1         1       102s
+replicaset.apps/argocd-redis-79bdbdf78f                       1         1         1       102s
+replicaset.apps/argocd-repo-server-5569c7b657                 1         1         1       102s
+replicaset.apps/argocd-server-664b7c6878                      1         1         1       101s
+
+NAME                                             READY   AGE
+statefulset.apps/argocd-application-controller   1/1     101s
 ```
 
 En el mismo repositorio tenemos disponible otro archivo yaml llamado "namespace-install.yaml", con el que instalaremos ArgoCD como en el caso anterior. La única diferencia es que este está pensado para entornos con muchos usuarios repartidos entre diferentes equipos y proyectos, entre los cuales se han dividido los recursos del cluster mediante el uso de **espacios de nombre**. En este sentido, namespace-install.yaml permite instalar ArgoCD en un espacio de nombre concreto, y no requiere que tengamos privilegios a nivel de cluster. Esta es la mejor opción si queremos instalar ArgoCD en un solo cluster pero que también pueda gestionar otros externos.
 
+Por último, también tenemos la opción de instalar ArgoCD en **alta disponibilidad**. El proceso es similar a los casos anteriores, con la única diferencia de que aquí se crearán múltiples réplicas para los distintos componentes.
+```
+lpruna@debian:~$ kubectl create namespace argocd
+lpruna@debian:~$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
+
+lpruna@debian:~$ kubectl get all -n argocd
+NAME                                                    READY   STATUS              RESTARTS   AGE
+pod/argocd-application-controller-0                     0/1     ContainerCreating   0          5s
+pod/argocd-applicationset-controller-79f97597cb-bx2hk   1/1     Running             0          6s
+pod/argocd-dex-server-6fd8b59f5b-m7xvs                  0/1     Init:0/1            0          6s
+pod/argocd-notifications-controller-5549f47758-b69bl    0/1     ContainerCreating   0          5s
+pod/argocd-redis-ha-haproxy-5b75bb98dc-jtk8x            0/1     Pending             0          5s
+pod/argocd-redis-ha-haproxy-5b75bb98dc-x6lk9            0/1     Pending             0          5s
+pod/argocd-redis-ha-haproxy-5b75bb98dc-xw7lw            0/1     Init:0/1            0          5s
+pod/argocd-redis-ha-server-0                            0/2     Init:0/1            0          5s
+pod/argocd-repo-server-67c5d5bf75-5cwjl                 0/1     PodInitializing     0          5s
+pod/argocd-repo-server-67c5d5bf75-njdcc                 0/1     Pending             0          5s
+pod/argocd-server-757f6d6795-gw4bs                      0/1     ContainerCreating   0          5s
+pod/argocd-server-757f6d6795-pfs5z                      0/1     Pending             0          5s
+
+NAME                                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+service/argocd-applicationset-controller          ClusterIP   10.102.66.212    <none>        7000/TCP                     6s
+service/argocd-dex-server                         ClusterIP   10.97.97.253     <none>        5556/TCP,5557/TCP,5558/TCP   6s
+service/argocd-metrics                            ClusterIP   10.107.125.159   <none>        8082/TCP                     6s
+service/argocd-notifications-controller-metrics   ClusterIP   10.104.154.138   <none>        9001/TCP                     6s
+service/argocd-redis-ha                           ClusterIP   None             <none>        6379/TCP,26379/TCP           6s
+service/argocd-redis-ha-announce-0                ClusterIP   10.100.78.54     <none>        6379/TCP,26379/TCP           6s
+service/argocd-redis-ha-announce-1                ClusterIP   10.104.171.78    <none>        6379/TCP,26379/TCP           6s
+service/argocd-redis-ha-announce-2                ClusterIP   10.97.51.120     <none>        6379/TCP,26379/TCP           6s
+service/argocd-redis-ha-haproxy                   ClusterIP   10.103.93.213    <none>        6379/TCP                     6s
+service/argocd-repo-server                        ClusterIP   10.102.153.79    <none>        8081/TCP,8084/TCP            6s
+service/argocd-server                             ClusterIP   10.105.140.145   <none>        80/TCP,443/TCP               6s
+service/argocd-server-metrics                     ClusterIP   10.105.227.247   <none>        8083/TCP                     6s
+
+NAME                                               READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/argocd-applicationset-controller   1/1     1            1           6s
+deployment.apps/argocd-dex-server                  0/1     1            0           6s
+deployment.apps/argocd-notifications-controller    0/1     1            0           6s
+deployment.apps/argocd-redis-ha-haproxy            0/3     3            0           6s
+deployment.apps/argocd-repo-server                 0/2     2            0           5s
+deployment.apps/argocd-server                      0/2     2            0           5s
+
+NAME                                                          DESIRED   CURRENT   READY   AGE
+replicaset.apps/argocd-applicationset-controller-79f97597cb   1         1         1       6s
+replicaset.apps/argocd-dex-server-6fd8b59f5b                  1         1         0       6s
+replicaset.apps/argocd-notifications-controller-5549f47758    1         1         0       6s
+replicaset.apps/argocd-redis-ha-haproxy-5b75bb98dc            3         3         0       5s
+replicaset.apps/argocd-repo-server-67c5d5bf75                 2         2         0       5s
+replicaset.apps/argocd-server-757f6d6795                      2         2         0       5s
+
+NAME                                             READY   AGE
+statefulset.apps/argocd-application-controller   0/1     5s
+statefulset.apps/argocd-redis-ha-server          0/3     5s
+```
+
 <br>
 
-### Instalación de ArgoCD mediante Autopilot
+### Instalación de ArgoCD con Autopilot
 
 <p align="center">
 <img src="images/argo_autopilot.png" alt="ArgoCD en piloto automático" width="450"/>
@@ -243,10 +338,43 @@ INFO run:
 <img src="images/PortalArgoCD2.png" alt="Proyectos de Autopilot en ArgoCD" width="750"/>
 </p>
 
-Lo siguiente será crear nuestro primer proyecto:
+Si olvidamos la contraseña del administrador de ArgoCD, siempre podemos recuperarla con el siguiente comando:
+```
+kubectl get secret argocd-initial-admin-secret -n argocd -ogo-template='{{printf "%s\n" (index (index . "data") "password" | base64decode)}}'
+```
+
+Lo siguiente sería crear nuestro primer proyecto. Para ello, ejecutamos el siguiente comando:
 ```
 argocd-autopilot project create mi-primer-proyecto
 ```
+
+Por último, instalamos nuestra primera aplicación en el proyecto, habiendo creado previamente un repositorio para la misma. En la documentación de Autopilot nos ofrecen una aplicación de prueba:
+```
+argocd-autopilot app create demoapp --app github.com/argoproj-labs/argocd-autopilot/examples/demo-app/ -p mi-primer-proyecto
+```
+
+Si nos vamos a la interfaz gráfica de ArgoCD, veremos que nos aparece la aplicación instalada:
+
+<p align="center">
+<img src="images/demoapp-argocd.png" alt="Nueva app en ArgoCD" width="750"/>
+</p>
+
+En el repositorio de Autopilot también se nos habrá añadido un nuevo directorio para la app:
+
+<p align="center">
+<img src="images/demoapp-git.png" alt="Nueva app en GitOps" width="500"/>
+</p>
+
+Para desinstalar Autopilot, usamos el argumento `uninstall`, con el que se borrarán el repositorio donde hemos guardado la herramienta y los recursos del mismo en el cluster de Kubernetes.
+```
+argocd-autopilot repo uninstall
+```
+
+<br>
+
+### Instalación de ArgoCD con Helm
+
+
 
 <br>
 
@@ -268,7 +396,13 @@ AnAr Solutions. (2021, 11 noviembre). Compare Infrastructure as Code - IaC vs Gi
 
 Andrada Prieto, J. (s. f.). ¿Qué es GITOPS? Viewnext. Recuperado 15 de marzo de 2022, de https://www.viewnext.com/que-es-gitops/
 
+argoproj-labs. (2022, 7 abril). GitHub - argoproj-labs/argocd-autopilot: Argo-CD Autopilot. GitHub. Recuperado 11 de abril de 2022, de https://github.com/argoproj-labs/argocd-autopilot
+
 Dubey, A. (2022, 20 enero). All About ArgoCD, A Beginner’s Guide. DEV Community. Recuperado 2 de abril de 2022, de https://dev.to/abhinavd26/all-about-argocd-a-beginners-guide-33c9Jerez, Á. G. (2020, 29 mayo).
+
+GitHub. (s. f.). Crear un token de acceso personal. Github Docs. Recuperado 11 de abril de 2022, de https://docs.github.com/es/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+
+Iesgn. (2022, 9 marzo). GitHub - iesgn/curso_kubernetes_cep. GitHub. Recuperado 11 de abril de 2022, de https://github.com/iesgn/curso_kubernetes_cep
 
 Implementando GitOps con ArgoCD. Adictos al trabajo. Recuperado 2 de abril de 2022, de https://www.adictosaltrabajo.com/2020/05/25/implementando-gitops-con-argocd/
 
