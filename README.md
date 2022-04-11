@@ -9,6 +9,7 @@
 		1. [¿Qué es GitOps?](#¿que-es-gitops?)
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
+		4. [Configuración de ArgoCD](#configuración-de-argocd)
 	2. [ArgoCD](#argocd)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
 	1. [Instalación de ArgoCD con declaraciones](#instalación-de-argocd-con-declaraciones)
@@ -374,7 +375,96 @@ argocd-autopilot repo uninstall
 
 ### Instalación de ArgoCD con Helm
 
+Si tenemos Helm instalado en nuestra máquina, podemos emplear un [chart de ArgoCD](https://github.com/argoproj/argo-helm/tree/master/charts/argo-cd) para instalarlo. Para ello, primero añadimos el repositorio de argo:
+```
+helm repo add argo https://argoproj.github.io/argo-helm
+```
 
+Después, instalamos el chart desde el mismo:
+```
+helm install my-release argo/argo-cd
+```
+
+Si queremos tener el chart de ArgoCD en alta disponibilidad, tendríamos que editar el fichero `values.yaml` y modificar los valores que se muestran a continuación, dependiendo de si queremos habilitar o no el autoescalado:
+
+* Alta disponibilidad con autoescalado:
+```
+redis-ha:
+  enabled: true
+
+controller:
+  enableStatefulSet: true
+
+server:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+
+repoServer:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+```
+
+* Alta disponibilidad sin autoescalado:
+```
+redis-ha:
+  enabled: true
+
+controller:
+  enableStatefulSet: true
+
+server:
+  replicas: 2
+  env:
+    - name: ARGOCD_API_SERVER_REPLICAS
+      value: '2'
+
+repoServer:
+  replicas: 2
+```
+
+<br>
+
+### Configuración de ArgoCD
+
+Una vez tengamos instalado ArgoCD mediante cualquiera de las opciones descritas antes, podemos personalizarlo según nuestras necesidades. Para empezar, podemos generar un recurso ***Ingress*** para poder acceder a la interfaz gráfica a través de un nombre de dominio en lugar de una dirección IP. Para ahorrarnos tener que generar certificados SSL, editamos el recurso `deployments.apps/argocd-server`:
+```
+kubectl edit -n argocd deployments.apps argocd-server
+```
+
+Nos dirigimos a la línea donde se define el comando `argocd-server` y añadimos debajo la opción `--insecure`:
+```
+containers:
+- command:
+  - argocd-server
+  - --insecure
+```
+
+Ya podríamos crear el *Ingress* de la manera tradicional:
+```
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+spec:
+  rules:
+  - host: www.argocd.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+```
+
+Finalmente, aplicamos el fichero yaml:
+```
+kubectl apply -n argocd -f ingress.yaml
+```
 
 <br>
 
@@ -395,6 +485,8 @@ argocd-autopilot repo uninstall
 AnAr Solutions. (2021, 11 noviembre). Compare Infrastructure as Code - IaC vs Gitops. AnAr Solutions Pvt. Ltd. Recuperado 16 de marzo de 2022, de https://anarsolutions.com/iac-vs-gitops/
 
 Andrada Prieto, J. (s. f.). ¿Qué es GITOPS? Viewnext. Recuperado 15 de marzo de 2022, de https://www.viewnext.com/que-es-gitops/
+
+ArgoCD. (s. f.). Ingress Configuration - Argo CD - Declarative GitOps CD for Kubernetes. Argo CD. Recuperado 11 de abril de 2022, de https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/
 
 argoproj-labs. (2022, 7 abril). GitHub - argoproj-labs/argocd-autopilot: Argo-CD Autopilot. GitHub. Recuperado 11 de abril de 2022, de https://github.com/argoproj-labs/argocd-autopilot
 
