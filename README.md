@@ -9,12 +9,12 @@
 		1. [¿Qué es GitOps?](#¿que-es-gitops?)
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
-		4. [Configuración de ArgoCD](#configuración-de-argocd)
 	2. [ArgoCD](#argocd)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
 	1. [Instalación de ArgoCD con declaraciones](#instalación-de-argocd-con-declaraciones)
 	2. [Instalación de ArgoCD con Autopilot](#instalación-de-argocd-con-autopilot)
 	3. [Instalación de ArgoCD con Helm](#instalación-de-argocd-con-helm)
+	4. [Configuración de ArgoCD](#configuración-de-argocd)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
@@ -428,7 +428,9 @@ repoServer:
 
 ### Configuración de ArgoCD
 
-Una vez tengamos instalado ArgoCD mediante cualquiera de las opciones descritas antes, podemos personalizarlo según nuestras necesidades. Para empezar, podemos generar un recurso ***Ingress*** para poder acceder a la interfaz gráfica a través de un nombre de dominio en lugar de una dirección IP. Para ahorrarnos tener que generar certificados SSL, editamos el recurso `deployments.apps/argocd-server`:
+Una vez tengamos instalado ArgoCD mediante cualquiera de las opciones descritas antes, podemos personalizarlo según nuestras necesidades. Hay que tener en cuenta que, si lo hemos **instalado con Autopilot**, no podremos realizar ningún tipo de modificación en los ficheros de configuración, puesto que dicha aplicación se encargará de restaurarlos al menor cambio. Esto se debe a que, como he mencionado anteriormente, Autopilot está pensado para que la aplicación de ArgoCD se gestione por sí sola. Por lo tanto, si ese es el caso, podéis ignorar este apartado y continuar en el siguiente.
+
+Dicho esto, para empezar a configurar ArgoCD, podemos generar un recurso ***Ingress*** para poder acceder a la interfaz gráfica a través de un nombre de dominio en lugar de una dirección IP. Para ahorrarnos tener que generar certificados SSL, editamos el recurso `deployments.apps/argocd-server`:
 ```
 kubectl edit -n argocd deployments.apps argocd-server
 ```
@@ -464,6 +466,93 @@ spec:
 Finalmente, aplicamos el fichero yaml:
 ```
 kubectl apply -n argocd -f ingress.yaml
+```
+
+Hecho esto, solo quedaría añadir el dominio a nuestro servidor DNS o realizar una resolución estática en el fichero `/etc/hosts` de nuestra máquina.
+
+<p align="center">
+<img src="images/PortalArgoCD_dominio.png" alt="Accediendo al portal de ArgoCD con un dominio" width="750"/>
+</p>
+
+Una vez comprobemos que podemos acceder a ArgoCD a través con el Ingress, es recomandable que, por razones de seguridad, creemos **usuarios locales** en lugar de utilizar el usuario `admin` que se nos proporciona al final de la instalación. El uso de usuarios locales nos permite no solo gestionar el acceso de estos de manera independiente, sino también configurar una cuenta API con permisos limitados y generar un token de autenticación con el que el usuario podrá crear proyectos y aplicaciones automáticamente. Para ello, crearemos un recurso *ConfigMap* para cada usuario con el siguiente contenido:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # En este caso, añadimos un usuario local con los privilegios apikey y login
+  #   apiKey: permite generar claves API
+  #   login: permite iniciar sesión en la interfaz de usuario
+  # El nombre de usuario no debe pasarse de los 32 caracteres
+  accounts.lara: apiKey, login
+  # La siguiente línea deshabilita el usuario, que por defecto está habilitado
+  #accounts.lara.enabled: "false"
+```
+
+Al aplicar el fichero yaml, habremos creado un nuevo usuario. Para comprobarlo, entramos en el pod argocd-server e iniciamos sesión con el usuario `admin` (el comando para obtener la contraseña del administrador inicial se indica en el apartado de instalación con Autopilot):
+```
+lpruna@debian:~$ kubectl exec -it pod/argocd-server-6456fd8bd6-n8x9g  -- bash
+argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd login www.argocd.org --insecure --grpc-web
+Username: admin
+Password:
+```
+
+Nota: si estamos utilizando un proxy que no soporta HTTP2, en la mayoría de comandos de ArgoCD necesitaremos añadir el parámetro `--grpc-web` para habilitar el protocolo gRPC-web y que no nos aparezca un *Warning*.
+
+A continuación, ejecutamos el siguiente comando para ver la lista de usuarios en ArgoCD:
+```
+argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd account list --grpc-web
+NAME   ENABLED  CAPABILITIES
+admin  true     login
+lara   true     apiKey, login
+```
+
+Como vemos, el nuevo usuario puede iniciar sesión y generar claves API. Con el siguiente comando, podemos obtener más información sobre el usuario:
+```
+argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd account get --account lara --grpc-web
+Name:               lara
+Enabled:            true
+Capabilities:       apiKey, login
+
+Tokens:
+NONE
+```
+
+El siguiente paso es generar una contraseña para el nuevo usuario:
+```
+argocd account update-password \
+  --account lara \
+  --current-password **************** \
+  --new-password ********* \
+  --grpc-web
+```
+
+* **--account**: nombre del nuevo usuario.
+* **--current-password**: contraseña del usuario actual (en mi caso , será la contraseña de `admin`).
+* **--new-password**: contraseña del nuevo usuario.
+
+Hecho esto, cerramos la sesión y salimos del pod.
+```
+argocd logout www.argocd.org
+```
+
+Ya podemos deshabilitar el usuario `admin` añadiendo la siguiente línea en nuestra definición de argocd-cm:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  admin.enabled: "false"
 ```
 
 <br>
