@@ -7,5 +7,5 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
 data:
-  accounts.lara: apiKey, login
-  admin.enabled: "false"
+  accounts.lara: apiKey, login, create, applications
+  admin.enabled: "true"

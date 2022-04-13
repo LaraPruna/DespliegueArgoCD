@@ -17,6 +17,7 @@
 	4. [Configuración de ArgoCD](#configuración-de-argocd)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 	1. [Crear una aplicación en ArgoCD](#crear-una-aplicación-en-argocd)
+		1. [Por interfaz gráfica](#por-interfaz-gráfica)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -495,7 +496,7 @@ data:
   #accounts.lara.enabled: "false"
 ```
 
-Al aplicar el fichero yaml, habremos creado un nuevo usuario. Para comprobarlo, emplearemos la interfaz de línea de comando de ArgoCD, para lo cual tenemos dos opciones:
+Al aplicar el fichero yaml, habremos creado un nuevo usuario. Para comprobarlo, emplearemos la interfaz de línea de comandos de ArgoCD, para lo cual tenemos dos opciones:
 
 * Entrar directamente en el **pod argocd-server** y gestionar los usuarios ahí dentro:
 ```
@@ -581,7 +582,32 @@ data:
 
 ### Crear una aplicación en ArgoCD
 
+En ArgoCD se puede crear una aplicación mediante la interfaz gráfica, por línea de comandos o definiendo los recursos en ficheros yaml que posteriormente le pasemos a Kubernetes. A continuación, veremos los diferentes procedimientos:
 
+#### Por interfaz gráfica
+
+En primer lugar, iniciamos sesión en ArgoCD con el nuevo usuario que nos hemos creado. Después, pulsamos en el bótón **+ NEW APP** y rellenamos los siguientes campos:
+
+**GENERAL**:
+
+* **Application Name**: nombre de la aplicación.
+* **Project**: el proyecto en el que queremos guardarla (si no hemos creado ninguno, escribimos "default").
+* **Sync Policy**: aquí decidiremos si queremos que el cluster se sincronice con el repositorio de forma manual o automática.
+
+**SOURCE**:
+
+* **Repository URL**: indicamos la URL del repositorio donde tengamos la aplicación.
+* **Revision (Branches)**: introducimos el nombre de la rama (*master* o *main*).
+* **Path**: ruta dentro del repositorio donde se encuentra la aplicación en sí.
+
+**DESTINATION**:
+
+* **Cluster URL**: URL del cluster donde queremos que se despliegue la aplicación (si es en la misma máquina donde tenemos ArgoCD, introducimos "https://kubernetes.default.svc").
+* **Namespace**: espacio de nombre donde se desplegará la aplicación (si no tenemos ninguno en particular, escribimos "default").
+
+<p align="center">
+<img src="images/CreateApp.gif" alt="Creación de una aplicación en ArgoCD GUI" width="750"/>
+</p>
 
 <br>
 
