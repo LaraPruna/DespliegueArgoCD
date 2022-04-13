@@ -16,6 +16,7 @@
 	3. [Instalación de ArgoCD con Helm](#instalación-de-argocd-con-helm)
 	4. [Configuración de ArgoCD](#configuración-de-argocd)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
+	1. [Crear una aplicación en ArgoCD](#crear-una-aplicación-en-argocd)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -494,19 +495,32 @@ data:
   #accounts.lara.enabled: "false"
 ```
 
-Al aplicar el fichero yaml, habremos creado un nuevo usuario. Para comprobarlo, entramos en el pod argocd-server e iniciamos sesión con el usuario `admin` (el comando para obtener la contraseña del administrador inicial se indica en el apartado de instalación con Autopilot):
+Al aplicar el fichero yaml, habremos creado un nuevo usuario. Para comprobarlo, emplearemos la interfaz de línea de comando de ArgoCD, para lo cual tenemos dos opciones:
+
+* Entrar directamente en el **pod argocd-server** y gestionar los usuarios ahí dentro:
 ```
-lpruna@debian:~$ kubectl exec -it pod/argocd-server-6456fd8bd6-n8x9g  -- bash
-argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd login www.argocd.org --insecure --grpc-web
+kubectl exec -it pod/argocd-server-6456fd8bd6-n8x9g  -- bash
+```
+
+* O bien, instalar **ArgoCD CLI** en nuestra máquina. Esta es la opción más recomendable, así evitamos tocar el pod y ahorramos tiempo:
+```
+curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.1.5/argocd-linux-amd64
+chmod +x /usr/local/bin/argocd
+```
+
+Iniciamos sesión con el usuario `admin` (el comando para obtener la contraseña del administrador inicial se indica en el apartado de instalación con Autopilot):
+```
+~$ argocd login www.argocd.org --insecure --grpc-web
 Username: admin
 Password:
 ```
 
-Nota: si estamos utilizando un proxy que no soporta HTTP2, en la mayoría de comandos de ArgoCD necesitaremos añadir el parámetro `--grpc-web` para habilitar el protocolo gRPC-web y que no nos aparezca un *Warning*.
+* **--insecure**: ArgoCD dispone de un certificado autofirmado, y por defecto intenta realizar una conexión TLS. En un entorno de producción usaríamos un certificado para comunicarnos con el servidor, pero en su ausencia podemos deshabilitar TLS con este parámetro.
+* **--grpc-web**: si estamos utilizando un proxy que no soporta HTTP2, en la mayoría de comandos de ArgoCD necesitaremos añadir esta opción para habilitar el protocolo gRPC-web y que no nos aparezca un *Warning*.
 
 A continuación, ejecutamos el siguiente comando para ver la lista de usuarios en ArgoCD:
 ```
-argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd account list --grpc-web
+~$ argocd account list --grpc-web
 NAME   ENABLED  CAPABILITIES
 admin  true     login
 lara   true     apiKey, login
@@ -514,7 +528,7 @@ lara   true     apiKey, login
 
 Como vemos, el nuevo usuario puede iniciar sesión y generar claves API. Con el siguiente comando, podemos obtener más información sobre el usuario:
 ```
-argocd@argocd-server-6456fd8bd6-n8x9g:~$ argocd account get --account lara --grpc-web
+~$ argocd account get --account lara --grpc-web
 Name:               lara
 Enabled:            true
 Capabilities:       apiKey, login
@@ -536,12 +550,17 @@ argocd account update-password \
 * **--current-password**: contraseña del usuario actual (en mi caso , será la contraseña de `admin`).
 * **--new-password**: contraseña del nuevo usuario.
 
+También podemos aprovechar para generar el token de autenticación para el acceso API. Para ello, ejecutamos el siguiente comando seguido del usuario para el cual queremos generarlo (si es el usuario actual, podemos omitir el parámetro `--account`):
+```
+argocd account generate-token --account lara --grpc-web
+```
+
 Hecho esto, cerramos la sesión y salimos del pod.
 ```
 argocd logout www.argocd.org
 ```
 
-Ya podemos deshabilitar el usuario `admin` añadiendo la siguiente línea en nuestra definición de argocd-cm:
+Ya podemos deshabilitar el usuario `admin` añadiendo una línea a nuestra definición de argocd-cm:
 ```
 apiVersion: v1
 kind: ConfigMap
@@ -552,12 +571,17 @@ metadata:
     app.kubernetes.io/name: argocd-cm
     app.kubernetes.io/part-of: argocd
 data:
+  accounts.lara: apiKey, login
   admin.enabled: "false"
 ```
 
 <br>
 
 ## Desarrollo del proyecto
+
+### Crear una aplicación en ArgoCD
+
+
 
 <br>
 
