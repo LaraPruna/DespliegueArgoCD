@@ -11,13 +11,14 @@
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
-	1. [Instalación de ArgoCD con declaraciones](#instalación-de-argocd-con-declaraciones)
+	1. [Instalación de ArgoCD con manifiestos](#instalación-de-argocd-con-manifiestos)
 	2. [Instalación de ArgoCD con Autopilot](#instalación-de-argocd-con-autopilot)
 	3. [Instalación de ArgoCD con Helm](#instalación-de-argocd-con-helm)
 	4. [Configuración de ArgoCD](#configuración-de-argocd)
 5. [Desarrollo del proyecto](#desarrollo-del-proyecto)
 	1. [Crear una aplicación en ArgoCD](#crear-una-aplicación-en-argocd)
 		1. [Por interfaz gráfica](#por-interfaz-gráfica)
+		2. [Por línea de comandos](#por-línea-de-comandos)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -88,8 +89,8 @@ Aspectos a destacar de este proceso:
 GitOps nos permite modificar el proceso para que sea como sigue:
 
 1. Los primeros pasos son los mismos: el desarrollador aplica los cambios del código fuente, y el sistema de IC crea un despliegue que se guarda en un registro.
-2. Nadie tiene acceso directo al cluster de Kubernetes, y hay un segundo repositorio Git con todas las declaraciones que definen la aplicación.
-3. Otra persona o un sistema automatizado cambia las declaraciones en el segundo repositorio Git.
+2. Nadie tiene acceso directo al cluster de Kubernetes, y hay un segundo repositorio Git con todos los manifiestos que definen la aplicación.
+3. Otra persona o un sistema automatizado cambia los manifiestos en el segundo repositorio Git.
 4. Un controlador de GitOps que se ejecuta dentro del cluster monitoriza el repositorio Git y modifica el estado del cluster tan pronto se aplique un cambio, para hacer coincidir dicho estado con el que se describe en Git.
 
 <p align="center">
@@ -120,7 +121,7 @@ Hay que mencionar que no todo es oro en GitOps: el almacenamiento de **objetos d
 ArgoCD, perteneciente a la Cloud Native Computing Foundation (CNCF), es una de las herramientas más populares actualmente (y de las primeras que apareció en el mercado) para desplegar de forma continua aplicaciones en Kubernetes y con base de GitOps. No solo se la conoce por su excelente **administración y despliegue de aplicaciones de Kubernetes**, sino también por sus funciones de autocorrección de errores, gestión de acceso de usuarios, verificación de estado, etc. ArgoCD implementa todos los principios de GitOps que hemos descrito antes de la siguiente manera:
 
 1. Instalamos Argo CD como un controlador en el cluster de Kubernetes. Normalmente, lo instalaremos en el mismo cluster que va a gestionar, aunque también puede administrar otros clústeres externos.
-2. Almacenamos las declaraciones en Git, sean del tipo que sean. ArgoCD es bastante abierto a este respecto, soporta tanto declaraciones simples de Kubernetes como *charts* de Helm, definiciones de Kustomize y otros sistemas de plantillas.
+2. Almacenamos las definiciones en Git, sean del tipo que sean. ArgoCD es bastante abierto a este respecto, soporta tanto manifiestos simples de Kubernetes como *charts* de Helm, definiciones de Kustomize y otros sistemas de plantillas.
 3. Creamos una aplicación en ArgoCD indicando qué repositorio Git va a monitorizar, y en qué cluster o espacio de nombre deberá instalarse dicha aplicación.
 4. Desde este momento, ArgoCD monitorizará el repositorio de Git, y cuando haya algún cambio, modificará el cluster de forma automática para que tenga el mismo estado.
 5. De manera opcional, ArgoCD desplegará aplicaciones en otros clústeres (no solo en el que se encuentra instalado).
@@ -149,7 +150,7 @@ Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json
 
 En este apartado describiremos el proceso de instalación de ArgoCD para poder desplegar posteriormente nuestra aplicación. Existen varias formas de instalarlo en un cluster de Kubernetes:
 
-### Instalación de ArgoCD con declaraciones
+### Instalación de ArgoCD con manifiestos
 
 Si solo queremos ArgoCD para hacer pruebas y experimentar con la herramienta, podemos desplegar ArgoCD directamente con el fichero install.yaml que nos ofrece ArgoCD en su [repositorio de GitHub](https://github.com/argoproj/argo-cd/tree/master/manifests). Creamos un espacio de nombre y aplicamos dicho archivo en el mismo.
 ```
@@ -320,7 +321,7 @@ A continuación, ejecutamos el arranque de instalación en nuestro entorno de Ku
 argocd-autopilot repo bootstrap
 ```
 
-Con esto, se nos habrá creado el [repositorio](https://github.com/LaraPruna/autopilot) (si no existía ya) con tres directorios: apps, bootstrap y projects. También se nos indicará al final de la instalación el usuario y la contraseña para acceder a ArgoCD y el comando que necesitamos para realizar un *port-forward*:
+Con esto, se nos habrá creado el repositorio (si no existía ya) con tres directorios: apps, bootstrap y projects. También se nos indicará al final de la instalación el usuario y la contraseña para acceder a ArgoCD y el comando que necesitamos para realizar un *port-forward*:
 ```
 INFO pushing bootstrap manifests to repo          
 Resolving deltas: 100% (1/1), done.
@@ -611,6 +612,92 @@ En primer lugar, iniciamos sesión en ArgoCD con el nuevo usuario que nos hemos 
 
 <br>
 
+#### Por línea de comandos
+
+Para crear una aplicación desde ArgoCD CLI, basta con ejecutar un único comando, con el que introduciremos los mismos valores que en la interfaz gráfica:
+```
+argocd app create guestbook \
+--project default \
+--repo https://github.com/LaraPruna/guestbook/ \
+--path app \
+--dest-namespace default \
+--dest-server https://kubernetes.default.svc \
+--sync-policy auto \
+--revision main
+```
+
+* En primer lugar, después de `argocd app create` indicamos el nombre de la aplicación.
+* **--project**: nombre del proyecto creado o, en su defecto, "default".
+* **--repo**: URL del repositorio Git donde se encuentra la aplicación.
+* **--path**: directorio dentro del repositorio donde está la aplicación.
+* **--dest-namespace**: espacio de nombre del cluster donde se va a desplegar.
+* **--dest-server**: URL del cluster donde se va a desplegar la aplicación ("https://kubernetes.default.svc" si está en la misma máquina que ArgoCD).
+* **--sync-policy**: indicamos si la sincronización se hará manual (`none`) o automáticamente (`auto`,`automated` o `automatic`).
+* **--revision**: rama del repositorio, etiqueta, *commit* o versión del chart de Helm con el que se sincronizará la aplicación.
+
+Una vez creada la aplicación, podemos comprobar que se ha creado de la siguiente manera:
+```
+~$ argocd app list
+NAME       CLUSTER                         NAMESPACE  PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                    PATH  TARGET
+guestbook  https://kubernetes.default.svc  default    default  Synced  Healthy  Auto        <none>      https://github.com/LaraPruna/guestbook  app   main
+```
+
+Para ver más detalles de la aplicación, usaremos este comando:
+```
+~$ argocd app get guestbook
+Name:               guestbook
+Project:            default
+Server:             https://kubernetes.default.svc
+Namespace:          default
+URL:                https://www.argocd.org/applications/guestbook
+Repo:               https://github.com/LaraPruna/guestbook/
+Target:             main
+Path:               app
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated
+Sync Status:        Synced to main (98304b7)
+Health Status:      Healthy
+```
+
+<br>
+
+#### Por manifiesto de Kubernetes
+
+Por último, tenemos la opción de definir las características de la aplicación en un fichero yaml y aplicarlo como un manifiesto de Kubernetes. Esta opción resulta bastante útil, y más rápida que los otros procedimientos, cuando queremos crear múltiples aplicaciones a partir de una **plantilla**.
+
+Para mostrar un ejemplo de ello, he creado un [repositorio](https://github.com/LaraPruna/PruebaApps) en GitHub con tres aplicaciones de Nginx definidas en yaml, que he pasado a Kubernetes para que se creen las réplicas, despliegues y pods correspondientes. Para crear estas aplicaciones en ArgoCD, creamos un recurso de tipo *Application* para cada una con el siguiente contenido, adaptando las rutas y nombres:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app1
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: app1
+    repoURL: https://github.com/LaraPruna/PruebaApps.git
+    targetRevision: master
+# Si queremos realizar la sincronización manualmente, la siguiente sección no la incluiríamos.
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+```
+
+Tras aplicar las tres aplicaciones, veremos que ahora nos aparecen en ArgoCD:
+
+<p align="center">
+<img src="images/apps1.png" alt="Tres nuesvas aplicaciones en ArgoCD" width="750"/>
+</p>
+
+<br>
+
 ## Conclusiones y propuestas adicionales para el proyecto
 
 <br>
@@ -638,6 +725,8 @@ Iesgn. (2022, 9 marzo). GitHub - iesgn/curso_kubernetes_cep. GitHub. Recuperado 
 Implementando GitOps con ArgoCD. Adictos al trabajo. Recuperado 2 de abril de 2022, de https://www.adictosaltrabajo.com/2020/05/25/implementando-gitops-con-argocd/
 
 Lingeswaran, R. (2021, 26 junio). GitOps vs Infrastructure as Code. UnixArena. Recuperado 15 de marzo de 2022, de https://www.unixarena.com/2021/06/gitops-vs-infrastructure-as-code.html/
+
+Sharma, A. (2021, 12 agosto). Automatically create multiple applications in Argo CD. Opensource.Com. Recuperado 14 de abril de 2022, de https://opensource.com/article/21/7/automating-argo-cd
 
 Weaveworks. (s. f.). GitOps what you need to know. Recuperado 15 de marzo de 2022, de https://www.weave.works/technologies/gitops/
 
