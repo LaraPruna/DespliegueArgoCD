@@ -19,6 +19,7 @@
 	1. [Crear una aplicación en ArgoCD](#crear-una-aplicación-en-argocd)
 		1. [Por interfaz gráfica](#por-interfaz-gráfica)
 		2. [Por línea de comandos](#por-línea-de-comandos)
+		3. [Por manifiesto de Kubernetes](#por-manifiesto-de-kubernetes)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
