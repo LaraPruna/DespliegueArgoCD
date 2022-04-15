@@ -20,6 +20,7 @@
 		1. [Por interfaz gráfica](#por-interfaz-gráfica)
 		2. [Por línea de comandos](#por-línea-de-comandos)
 		3. [Por manifiesto de Kubernetes](#por-manifiesto-de-kubernetes)
+	2. [Sincronizar una aplicación en ArgoCD](#sincronizar-una-aplicación-en-argocd)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -691,11 +692,63 @@ spec:
       selfHeal: false
 ```
 
-Tras aplicar las tres aplicaciones, veremos que ahora nos aparecen en ArgoCD:
+Tras pasar a Kubernetes las tres aplicaciones, veremos que ahora nos aparecen en ArgoCD:
 
 <p align="center">
 <img src="images/apps1.png" alt="Tres nuesvas aplicaciones en ArgoCD" width="750"/>
 </p>
+
+<br>
+
+### Sincronizar una aplicación en ArgoCD
+
+Si hemos establecido una política de sincronización manual, al crear una aplicación en ArgoCD, está nos aparecerá desincronizada (***OutOfSync***). Esto quiere decir que aún no se ha desplegado la aplicación ni se han creado los recursos correspondientes en Kubernetes.
+
+<p align="center">
+<img src="images/OutOfSync.png" alt="Estado de la aplicación: OutOfSync" width="550"/>
+</p>
+
+```
+~$ argocd app list
+NAME  CLUSTER                         NAMESPACE  PROJECT  STATUS     HEALTH   SYNCPOLICY  CONDITIONS  REPO                                     PATH  TARGET
+app1  https://kubernetes.default.svc  default    default  OutOfSync  Missing  <none>      <none>      https://github.com/LaraPruna/PruebaApps  app1  master
+```
+
+Para sincronizar y desplegar la aplicación manualmente, podemos hacerlo de dos maneras:
+
+* **Por interfaz gráfica**
+
+1. Pulsamos en el botón **SYNC** en la aplicación, con lo que nos saldrá una ventana con diferentes opciones de sincronización.
+2. Seleccionamos la opciones por defecto (**default**) y sincronizamos todos los manifiestos.
+
+<p align="center">
+<img src="images/sync.png" alt="Sincronización" width="500"/>
+</p>
+
+* **Por línea de comandos**
+
+Aquí bastará con ejecutar un único comando, en el que introduciremos como argumento el nombre de la aplicación:
+```
+argocd app sync app1
+```
+
+Para comprobar que se han creado los recursos, ejecutamos el siguiente comando (si se ha realizado la sincronización correctamente, los pods de la aplicación aparecerán con el estado *Runnning*):
+```
+~$ kubectl get all
+NAME                        READY   STATUS    RESTARTS   AGE
+pod/app1-54487f9586-c5psw   1/1     Running   0          4m11s
+pod/app1-54487f9586-t7jg5   1/1     Running   0          4m11s
+pod/app1-54487f9586-tn58h   1/1     Running   0          4m11s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   39d
+
+NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/app1   3/3     3            3           4m11s
+
+NAME                              DESIRED   CURRENT   READY   AGE
+replicaset.apps/app1-54487f9586   3         3         3       4m11s
+```
 
 <br>
 
