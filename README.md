@@ -21,6 +21,7 @@
 		2. [Por línea de comandos](#por-línea-de-comandos)
 		3. [Por manifiesto de Kubernetes](#por-manifiesto-de-kubernetes)
 	2. [Sincronizar una aplicación en ArgoCD](#sincronizar-una-aplicación-en-argocd)
+	3. [El bucle de reconciliación](#el-bucle-de-reconciliación)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -749,6 +750,52 @@ deployment.apps/app1   3/3     3            3           4m11s
 NAME                              DESIRED   CURRENT   READY   AGE
 replicaset.apps/app1-54487f9586   3         3         3       4m11s
 ```
+
+También podemos ver el historial de despliegues de la aplicación. Como acabamos de sincronizarlo por primera vez, solo nos aparecerá uno:
+```
+~$ argocd app history app1
+ID  DATE                            REVISION
+0   2022-04-15 13:12:19 +0200 CEST  master (74d2c1a)
+```
+
+### El bucle de reconciliación
+
+En el apartado anterior hemos visto cómo sincronizar una aplicación manualmente a través de la interfaz grafica y de la consola. Sin embargo, también podemos configurarla de tal manera que sea ArgoCD el que se encargue sincronizarla automáticamente. Por defecto, la **reconciliación** se realizará cada 3 minutos, momento en el que ArgoCD llevará a cabo las siguientes tareas:
+
+1. Recopilar todas las aplicaciones configuradas para que se sincronicen automáticamente.
+2. Buscar el último estado de los repositorios Git correspondientes.
+3. Comparar el estado de los repositorios con el del cluster.
+4. Tomar una de las siguientes medidas:
+	* Si ambos estados coinciden, marcar directamente la aplicación como sincronizada (*Synced*).
+	* Si los estados difieren, marcar la aplicación como no sincronizada (*OutOfSync*).
+
+Si no estamos satisfechos con el periodo de reconciliación, podemos cambiarlo editando el recurso ConfigMap que encontraremos en el propio espacio de nombre de ArgoCD.
+```
+kubectl edit configmaps -n argocd argocd-cm
+```
+
+Añadiendo la siguiente línea dentro del apartado "data", cambiamos el periodo de sincronización a 4 minutos:
+```
+timeout.reconciliation: 240s
+```
+
+Tras editar el recurso, tendremos que volver a desplegar el servicio `argocd-repo-server`. Para deshabilitar completamente la sincronización automática, pondremos el valor a 0.
+
+Por último, podemos cambiar la forma en que ArgoCD descubre los cambios en el repositorio Git. En lugar de hacer que ArgoCD revise el repositorio cada cierto tiempo, podemos emplear ***webhooks*** Git, o bien combinarlos con el bucle de reconciliación. De esta manera, nos aseguramos de que se sincronice la aplicación en el caso de que los *webhooks* fallen.
+
+La ventaja de los *webhooks* es que permiten desplegar la aplicación de forma eficiente, al activar la sincronización en el momento de guardar los cambios en el repositorio en lugar de tener esperar que pase el periodo de reconciliación que tengamos configurado en ArgoCD.
+
+ArgoCD soporta *webhooks* de GitHub, GitLab, Bitbucket, BitBucket Server y Gogs. A continuación veremos cómo configurar un *webhook* de GitHub:
+
+#### Crear un *webhook* en GitHub
+
+Desde el repositorio de nuestra aplicación en GitHub, nos dirigimos a la pestaña "Settings" > "Webhooks" y añadimos uno nuevo:
+
+* **Payload URL**: introducimos la URL de nuestro repositorio seguido de la ruta `/api/webhook`.
+* **Content type**: por defecto, nos encontraremos el valor "application/x-www-form-urlencoded", que no está soportado por la librería usada por ArgoCD para gestionar los *webhooks*. Por lo tanto, cambiaremos este valor por "application/json".
+* De manera opcional, podemos configurar el *webhook* con un ***secret***, en cuyo caso, introduciríamos un valor arbitrario en este campo. En el siguiente apartado hablamos de esto con más detalle.
+
+
 
 <br>
 
