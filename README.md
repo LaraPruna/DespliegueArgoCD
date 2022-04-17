@@ -808,7 +808,7 @@ Desde el repositorio de nuestra aplicación en GitHub, nos dirigimos a la pesta�
 * De manera opcional, podemos configurar el *webhook* con un ***secret***, en cuyo caso, introduciríamos un valor arbitrario en este campo. En el siguiente apartado hablamos de esto con más detalle.
 
 <p align="center">
-<img src="images/NewWebhook.png" alt="Creando un webhook" width="750"/>
+<img src="images/NewWebhook.png" alt="Creando un webhook" width="600"/>
 </p>
 
 <br>
@@ -875,7 +875,7 @@ sudo apt update && sudo apt install ngrok
 Hecho esto, entramos en el sitio oficial de ngrok e iniciamos sesión (nos registramos si no lo hemos hecho ya). Nos vamos a la pestaña "Getting started > Setup & Installation", y ejecutamos el comando del paso 2 para conectarnos desde nuestra máquina al proxy de ngrok:
 
 <p align="center">
-<img src="images/ngrokAuth.png" alt="Nos conectamos a ngrok" width="700"/>
+<img src="images/ngrokAuth.png" alt="Nos conectamos a ngrok" width="750"/>
 </p>
 
 Por último, exponemos el servidor de ArgoCD indicando la URL que creamos con el *Ingress*:
