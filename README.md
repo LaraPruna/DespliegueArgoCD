@@ -10,6 +10,7 @@
 		2. [Principios de GitOps](#principio-de-gitops)
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
+	3. [Ngrok](#ngrok)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
 	1. [Instalación de ArgoCD con manifiestos](#instalación-de-argocd-con-manifiestos)
 	2. [Instalación de ArgoCD con Autopilot](#instalación-de-argocd-con-autopilot)
@@ -22,6 +23,9 @@
 		3. [Por manifiesto de Kubernetes](#por-manifiesto-de-kubernetes)
 	2. [Sincronizar una aplicación en ArgoCD](#sincronizar-una-aplicación-en-argocd)
 	3. [El bucle de reconciliación](#el-bucle-de-reconciliación)
+		1. [Crear un webhook en GitHub](#crear-un-webhook-en-github)
+		2. [Configurar el secret del webhook en ArgoCD](#configurar-el-secret-del-webhook-en-argocd)
+		3. [Instalación y uso de ngrok](#instalación-y-uso-de-ngrok)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -146,6 +150,14 @@ Argo CD cuenta con una **interfaz gráfica integrada** clara y fácil de adminis
 </p>
 
 Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json**, sino también herramientas como **Helm, Kustomize, Ksonnet**, etc. Permite la **autenticación** mediante OICD, OAuth2, LDAP, SAML 2.0, Github, GitLab, Microsoft, etc., y emplea una política basada en roles. En cuanto a la gestión de ***Secrets***, ArgoCD es compatible con Bitnami Sealed Secrets, Godaddy K8S External Secrets, Vault, Banzai Cloud Bank Vaults, Helm Secrets, Kustomize Secrets y AWS Secret Operator.
+
+<br>
+
+### Ngrok
+
+En este proyecto también aprenderemos a utilizar ngrok, un **proxy inverso** que nos ofrece una forma segura de acceder a nuestros servicios locales desde cualquier parte del mundo. En este caso, usaremos dicha herramienta para exponer a Internet las aplicaciones de ArgoCD alojadas en Kubernetes, para que los *webhooks* que creemos en nuestros repositorios Git puedan acceder a ellas y activar la sincronización con el cluster automáticamente.
+
+Ngrok funciona de una manera muy rápida y sencilla: una vez instalada la herramienta, basta con ejecutar un único comando en nuestra terminal indicando la URL/IP y el puerto donde tengamos la aplicación, con lo que obtendremos una URL generada dinámicamente y accesible desde Internet. Esta es la que utilizaremos a la hora de generar los webhooks.
 
 <br>
 
@@ -787,15 +799,114 @@ La ventaja de los *webhooks* es que permiten desplegar la aplicación de forma e
 
 ArgoCD soporta *webhooks* de GitHub, GitLab, Bitbucket, BitBucket Server y Gogs. A continuación veremos cómo configurar un *webhook* de GitHub:
 
-#### Crear un *webhook* en GitHub
+#### Crear un webhook en GitHub
 
 Desde el repositorio de nuestra aplicación en GitHub, nos dirigimos a la pestaña "Settings" > "Webhooks" y añadimos uno nuevo:
 
-* **Payload URL**: introducimos la URL de nuestro repositorio seguido de la ruta `/api/webhook`.
+* **Payload URL**: introducimos la URL de ArgoCD seguido de la ruta `/api/webhook`. Si se encuentra en nuestro host local y no es accesible desde Internet, podemos utilizar [ngrok](https://ngrok.com/download).
 * **Content type**: por defecto, nos encontraremos el valor "application/x-www-form-urlencoded", que no está soportado por la librería usada por ArgoCD para gestionar los *webhooks*. Por lo tanto, cambiaremos este valor por "application/json".
 * De manera opcional, podemos configurar el *webhook* con un ***secret***, en cuyo caso, introduciríamos un valor arbitrario en este campo. En el siguiente apartado hablamos de esto con más detalle.
 
+<p align="center">
+<img src="images/NewWebhook.png" alt="Creando un webhook" width="750"/>
+</p>
 
+<br>
+
+#### Configurar el secret del webhook en ArgoCD
+
+La configuración de un *secret* compartido a la hora de crear un *webhook* es **opcional**. ArgoCD actualizará igualmente las aplicaciones relacionadas con el repositorio Git independientemente de que tengan activado o no un control de acceso. El uso del *secret* se recomienda especialmente si Argo CD es accesible públicamente, para evitar sufrir un ataque DDoS. Por lo demás, no habría peligro en saltarnos este paso, puesto que lo único que se consigue con los *webhooks* es actualizar la aplicación (cosa que ya hace ArgoCD cada tres minutos).
+
+En el caso de que hayamos añadido un *secret*, editaríamos el recurso "argocd-secret" en Kubernetes:
+```
+kubectl edit secret argocd-secret -n argocd
+```
+
+Y añadiríamos el apartado `stringData` con el siguiente contenido, dependiendo de dónde hayamos creado el *webhook*:
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-secret
+  namespace: argocd
+type: Opaque
+data:
+...
+
+stringData:
+  # github webhook secret
+  webhook.github.secret: secret de github
+
+  # gitlab webhook secret
+  webhook.gitlab.secret: secret de gitlab
+
+  # bitbucket webhook secret
+  webhook.bitbucket.uuid: uuid de bitbucket
+
+  # bitbucket server webhook secret
+  webhook.bitbucketserver.secret: secret de bitbucket server
+
+  # gogs server webhook secret
+  webhook.gogs.secret: secret de gogs server
+```
+
+Al guardar los cambios, estos tendrán efecto de forma inmediata.
+
+<br>
+
+#### Instalación y uso de ngrok
+
+Una vez creado el *webhook* y configurado el *secret* (si procede), instalaremos la herramienta ngrok en la máquina donde tengamos ArgoCD. Podemos hacerlo de varias formas:
+
+* Descargando el **archivo TGZ** y descomprimiendo el binario en /usr/local/bin:
+```
+cd ~/Downloads
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+sudo tar xvzf ngrok-v3-stable-linux-amd64.tgz -C /usr/local/bin
+```
+
+* Instalándolo con **APT**:
+```
+curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+sudo apt update && sudo apt install ngrok
+```
+
+Hecho esto, entramos en el sitio oficial de ngrok e iniciamos sesión (nos registramos si no lo hemos hecho ya). Nos vamos a la pestaña "Getting started > Setup & Installation", y ejecutamos el comando del paso 2 para conectarnos desde nuestra máquina al proxy de ngrok:
+
+<p align="center">
+<img src="images/ngrokAuth.png" alt="Nos conectamos a ngrok" width="700"/>
+</p>
+
+Por último, exponemos el servidor de ArgoCD indicando la URL que creamos con el *Ingress*:
+```
+ngrok http www.argocd.org
+```
+
+Entonces nos aparecerá la siguiente salida:
+```
+ngrok                                                                           (Ctrl+C to quit)
+                                                                                                
+Session Status                online                                                            
+Session Expires               1 hour, 59 minutes                                                
+Terms of Service              https://ngrok.com/tos                                             
+Version                       3.0.2                                                             
+Region                        Europe (eu)                                                       
+Latency                       38.516666ms                                                       
+Web Interface                 http://127.0.0.1:4040                                             
+Forwarding                    https://ec90-188-78-86-122.eu.ngrok.io -> http://www.argocd.org:80
+                                                                                                
+Connections                   ttl     opn     rt1     rt5     p50     p90                       
+                              0       0       0.00    0.00    0.00    0.00
+```
+
+Hay que tener en cuenta que ngrok solo lo utilizaremos en un entorno de desarrollo, dado que se trata de una solución temporal para realizar pruebas. Como podemos ver, la URL que se nos ha generado durará un máximo de dos horas.
+
+Ya habríamos terminado de configurar el *webhook*. En el tiempo que dure la sesión creada por ngrok, cuando hagamos un cambio en la aplicación y lo guardemos mediante un `git push`, se nos sincronizará automáticamente en ArgoCD:
+
+<p align="center">
+<img src="images/sync2.png" alt="Sincronizando Bookmedik" width="750"/>
+</p>
 
 <br>
 
@@ -817,15 +928,21 @@ ArgoCD. (s. f.). Ingress Configuration - Argo CD - Declarative GitOps CD for Kub
 
 argoproj-labs. (2022, 7 abril). GitHub - argoproj-labs/argocd-autopilot: Argo-CD Autopilot. GitHub. Recuperado 11 de abril de 2022, de https://github.com/argoproj-labs/argocd-autopilot
 
+Decoster, J. (2022, 19 febrero). ArgoCD + Minikube + Ngrok + Github Webhook - jerome.decoster. Medium. Recuperado 17 de abril de 2022, de https://medium.com/@jerome.decoster/argocd-minikube-ngrok-github-webhook-3cd0cc15d559
+
 Dubey, A. (2022, 20 enero). All About ArgoCD, A Beginner’s Guide. DEV Community. Recuperado 2 de abril de 2022, de https://dev.to/abhinavd26/all-about-argocd-a-beginners-guide-33c9Jerez, Á. G. (2020, 29 mayo).
 
 GitHub. (s. f.). Crear un token de acceso personal. Github Docs. Recuperado 11 de abril de 2022, de https://docs.github.com/es/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+
+GitHub. (s. f.). Crear webhooks. GitHub Docs. Recuperado 17 de abril de 2022, de https://docs.github.com/es/developers/webhooks-and-events/webhooks/creating-webhooks
 
 Iesgn. (2022, 9 marzo). GitHub - iesgn/curso_kubernetes_cep. GitHub. Recuperado 11 de abril de 2022, de https://github.com/iesgn/curso_kubernetes_cep
 
 Implementando GitOps con ArgoCD. Adictos al trabajo. Recuperado 2 de abril de 2022, de https://www.adictosaltrabajo.com/2020/05/25/implementando-gitops-con-argocd/
 
 Lingeswaran, R. (2021, 26 junio). GitOps vs Infrastructure as Code. UnixArena. Recuperado 15 de marzo de 2022, de https://www.unixarena.com/2021/06/gitops-vs-infrastructure-as-code.html/
+
+Ponce, J. A. (2020, 1 septiembre). Ngrok: una herramienta con la que hacer público tu localhost de forma fácil y rápida. SDOS. Recuperado 17 de abril de 2022, de https://www.sdos.es/blog/ngrok-una-herramienta-con-la-que-hacer-publico-tu-localhost-de-forma-facil-y-rapida
 
 Sharma, A. (2021, 12 agosto). Automatically create multiple applications in Argo CD. Opensource.Com. Recuperado 14 de abril de 2022, de https://opensource.com/article/21/7/automating-argo-cd
 
