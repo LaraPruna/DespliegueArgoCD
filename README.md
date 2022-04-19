@@ -917,7 +917,7 @@ Ya habríamos terminado de configurar el *webhook*. En el tiempo que dure la ses
 
 ### La salud de la aplicación
 
-Además del estado de la sincronización, ArgoCD monitoriza la "salud" de los recursos en las aplicaciones desplegadas. El estado de salud se puede ver tanto en la interfaz gráfica como a través de la consola, y son los siguientes:
+Además del estado de la sincronización, ArgoCD monitoriza la "salud" de los recursos en las aplicaciones desplegadas. Los estados de salud se pueden ver tanto en la interfaz gráfica como a través de la consola, y son los siguientes:
 
 * **Healthy**: el recurso funciona correctamente.
 * **Progressing**: el recurso no funciona del todo bien, pero puede repararse y alcanzar el estado *healthy*.
