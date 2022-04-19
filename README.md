@@ -21,8 +21,8 @@
 		1. [Por interfaz gráfica](#por-interfaz-gráfica)
 		2. [Por línea de comandos](#por-línea-de-comandos)
 		3. [Por manifiesto de Kubernetes](#por-manifiesto-de-kubernetes)
-	2. [Sincronizar una aplicación en ArgoCD](#sincronizar-una-aplicación-en-argocd)
-	3. [El bucle de reconciliación](#el-bucle-de-reconciliación)
+	2. [Sincronizar una aplicación manualmente](#sincronizar-una-aplicación-manualmente)
+	3. [Sincronizar una aplicación automáticamente](#sincronizar-una-aplicación-automáticamente)
 		1. [Crear un webhook en GitHub](#crear-un-webhook-en-github)
 		2. [Configurar el secret del webhook en ArgoCD](#configurar-el-secret-del-webhook-en-argocd)
 		3. [Instalación y uso de ngrok](#instalación-y-uso-de-ngrok)
@@ -713,8 +713,7 @@ Tras pasar a Kubernetes las tres aplicaciones, veremos que ahora nos aparecen en
 
 <br>
 
-### Sincronizar una aplicación en ArgoCD
-
+### Sincronizar una aplicación manualmente
 Si hemos establecido una política de sincronización manual, al crear una aplicación en ArgoCD, está nos aparecerá desincronizada (***OutOfSync***). Esto quiere decir que aún no se ha desplegado la aplicación ni se han creado los recursos correspondientes en Kubernetes.
 
 <p align="center">
@@ -770,7 +769,7 @@ ID  DATE                            REVISION
 0   2022-04-15 13:12:19 +0200 CEST  master (74d2c1a)
 ```
 
-### El bucle de reconciliación
+### Sincronizar una aplicación automáticamente
 
 En el apartado anterior hemos visto cómo sincronizar una aplicación manualmente a través de la interfaz grafica y de la consola. Sin embargo, también podemos configurarla de tal manera que sea ArgoCD el que se encargue sincronizarla automáticamente. Por defecto, la **reconciliación** se realizará cada 3 minutos, momento en el que ArgoCD llevará a cabo las siguientes tareas:
 
@@ -905,7 +904,7 @@ Hay que tener en cuenta que ngrok solo lo utilizaremos en un entorno de desarrol
 Ya habríamos terminado de configurar el *webhook*. En el tiempo que dure la sesión creada por ngrok, cuando hagamos un cambio en la aplicación y lo guardemos mediante un `git push`, se nos sincronizará automáticamente en ArgoCD:
 
 <p align="center">
-<img src="images/sync2.png" alt="Sincronizando Bookmedik" width="750"/>
+<img src="images/AutosyncApp.gif" alt="Sincronizando Bookmedik" width="750"/>
 </p>
 
 <br>
