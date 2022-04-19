@@ -631,9 +631,9 @@ En primer lugar, iniciamos sesión en ArgoCD con el nuevo usuario que nos hemos 
 
 Para crear una aplicación desde ArgoCD CLI, basta con ejecutar un único comando, con el que introduciremos los mismos valores que en la interfaz gráfica:
 ```
-argocd app create guestbook \
+argocd app create app1 \
 --project default \
---repo https://github.com/LaraPruna/guestbook/ \
+--repo https://github.com/LaraPruna/PruebaApps/ \
 --path app \
 --dest-namespace default \
 --dest-server https://kubernetes.default.svc \
@@ -735,6 +735,12 @@ Para sincronizar y desplegar la aplicación manualmente, podemos hacerlo de dos 
 
 <p align="center">
 <img src="images/sync.png" alt="Sincronización" width="500"/>
+</p>
+
+Antes de sincronizar la aplicación, mientras aún está *OutOfSync*, también tenemos la opción de ver las diferencias entre el estado del repositorio y el del cluster, mediante el botón **APP DIFF**. En el siguiente ejemplo, se ve que he cambiado la versión de la imagen de Docker:
+
+<p align="center">
+<img src="images/AppDiff.png" alt="Diferencias entre ambos estados" width="750"/>
 </p>
 
 * **Por línea de comandos**
@@ -908,6 +914,17 @@ Ya habríamos terminado de configurar el *webhook*. En el tiempo que dure la ses
 </p>
 
 <br>
+
+### La salud de la aplicación
+
+Además del estado de la sincronización, ArgoCD monitoriza la "salud" de los recursos en las aplicaciones desplegadas. El estado de salud se puede ver tanto en la interfaz gráfica como a través de la consola. Los estados de salud que existen en ArgoCD son:
+
+* **Healthy**: el recurso funciona correctamente.
+* **Progressing**: el recurso no funciona del todo bien, pero puede repararse y alcanzar el estado *healthy*.
+* **Suspended**: el recurso está suspendido o pausado. Un ejemplo de esto es una tarea cron.
+* **Missing**: el recurso no se encuentra en el cluster.
+* **Degraded**: el estado del recurso indica un fallo, o simplemente no se ha podido reparar antes de la sincronización.
+* **Unknown**: no se ha podido evaluar el estado del recurso y, por lo tanto, se desconoce. 
 
 ## Conclusiones y propuestas adicionales para el proyecto
 
