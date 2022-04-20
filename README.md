@@ -26,6 +26,8 @@
 		1. [Crear un webhook en GitHub](#crear-un-webhook-en-github)
 		2. [Configurar el secret del webhook en ArgoCD](#configurar-el-secret-del-webhook-en-argocd)
 		3. [Instalación y uso de ngrok](#instalación-y-uso-de-ngrok)
+	4. [La salud de la aplicación](#la-salud-de-la-aplicación)
+	5. [Estrategias de sincronización](#estrategias-de-sincronización)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
 8. [Bibliografía](#bibliografia)
@@ -924,7 +926,30 @@ Además del estado de la sincronización, ArgoCD monitoriza la "salud" de los re
 * **Suspended**: el recurso está suspendido o pausado. Un ejemplo de esto es una tarea cron.
 * **Missing**: el recurso no se encuentra en el cluster.
 * **Degraded**: el estado del recurso indica un fallo, o simplemente no se ha podido reparar antes de la sincronización.
-* **Unknown**: no se ha podido evaluar el estado del recurso y, por lo tanto, se desconoce. 
+* **Unknown**: no se ha podido evaluar el estado del recurso y, por lo tanto, se desconoce.
+
+ArgoCD considera que los recursos están "sanos" si cumplen las siguientes características:
+
+* Los *Deployments*, *ReplicaSets*, *StatefulSets* y *DaemonSets* generados deben ser iguales a los que se desean generar.
+* El número de réplicas actualizadas debe equivaler al número de réplicas deseadas.
+
+En el caso de un servicio de tipo *LoadBalancer* o *Ingress*, se considerará que el recurso está sano si la sección `status.loadBalancer.ingress` no está vacía, es decir, debe haber al menos un valor, ya sea una IP o el nombre de un host.
+
+<br>
+
+### Estrategias de sincronización
+
+En los anteriores apartados, hemos visto cómo sincronizar una aplicación en ArgoCD tanto manual como automáticamente, pero ArgoCD también ofrece otras opciones. A la hora de definir una estrategia de sincronización, existen tres parámetros que se pueden cambiar según nuestras necesidades:
+
+1. **Sincronización manual o automática**.
+2. **Eliminación automática de recursos** (solo aplicable a la sincronización automática).
+3. **Autoreparación del cluster** (solo aplicable a la sincronización automática).
+
+La sincronización manual o automática define la acción que realizará ArgoCD cuando descubra una nueva versión de la aplicación en el repositorio Git. Si está en modo automático, se aplicarán los cambios y actualizará o creará nuevos recursos en el cluster. Si está en modo manual, ArgoCD detectará los cambios, pero no hará nada en el cluster.
+
+La eliminación automática (*auto-pruning*) le indica a ArgoCD qué hacer cuando eliminamos ficheros del repositorio Git. Si está habilitado, también se eliminarán los recursos correspondientes en el cluster. Si no, ArgoCD no eliminará nada del cluster.
+
+<br>
 
 ## Conclusiones y propuestas adicionales para el proyecto
 
