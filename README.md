@@ -28,9 +28,10 @@
 		3. [Instalación y uso de ngrok](#instalación-y-uso-de-ngrok)
 	4. [La salud de la aplicación](#la-salud-de-la-aplicación)
 	5. [Estrategias de sincronización](#estrategias-de-sincronización)
+	6. [Gestión de secrets](#gestión-de-secrets)
+		1. [Cómo funcionan los secrets en Kubernetes](#cómo-funcionan-los-secrets-en-kubernetes)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
-7. [Dificultades encontradas en el proyecto](#dificultades-encontradas-en-el-proyecto)
-8. [Bibliografía](#bibliografia)
+7. [Bibliografía](#bibliografia)
 
 -------------------------------------------------------------------------
 
@@ -943,19 +944,43 @@ En los anteriores apartados, hemos visto cómo sincronizar una aplicación en Ar
 
 1. **Sincronización manual o automática**.
 2. **Eliminación automática de recursos** (solo aplicable a la sincronización automática).
-3. **Autoreparación del cluster** (solo aplicable a la sincronización automática).
+3. **Autorreparación del cluster** (solo aplicable a la sincronización automática).
 
-La sincronización manual o automática define la acción que realizará ArgoCD cuando descubra una nueva versión de la aplicación en el repositorio Git. Si está en modo automático, se aplicarán los cambios y actualizará o creará nuevos recursos en el cluster. Si está en modo manual, ArgoCD detectará los cambios, pero no hará nada en el cluster.
+La sincronización manual o automática le indica a ArgoCD qué hacer cuando descubra una nueva versión de la aplicación en el repositorio Git. Si está en modo automático, se aplicarán los cambios y actualizará o creará nuevos recursos en el cluster. Si está en modo manual, ArgoCD detectará los cambios, pero no hará nada en el cluster.
 
 La eliminación automática (*auto-pruning*) le indica a ArgoCD qué hacer cuando eliminamos ficheros del repositorio Git. Si está habilitado, también se eliminarán los recursos correspondientes en el cluster. Si no, ArgoCD no eliminará nada del cluster.
+
+La autorreparación del cluster (*self-heal*) le indica a ArgoCD qué hacer cuando modifiquemos directamente el cluster. Hay que tener en cuenta que, si se quieren respetar los principios de GitOps, no es recomendable que hagamos los cambios manualmente. Si está habilitado, ArgoCD descartará estos cambios y devolverá el estado del cluster a como está en el repositorio.
+
+En este sentido, podemos elegir entre varias combinaciones de estas configuraciones:
+
+|   Estrategia   |    A   |   B  |   C  |   D  |   E  |
+|:--------------:|:------:|:----:|:----:|:----:|:----:|
+| Sincronización | Manual | Auto | Auto | Auto | Auto |
+|  Auto-pruning  | No hay |  No  |  Sí  |  No  |  Sí  |
+|    Self-heal   | No hay |  No  |  No  |  Sí  |  Sí  |
+
+La **estrategia A**, en la que ArgoCD no hace nada por su cuenta, es la que se recomienda seguir al principio, especialmente si se desea aplicar la metodología GitOps en un proyecto existente. De esta manera, se puede ir aprendiendo a utilizar ArgoCD sin afectar a los despliegues.
+
+En la **estrategia B** solo está habilitada la sincronización automática. Este sería el primer paso a seguir a la hora de implementar funciones de automatización en GitOps. En el momento en el que se realice un cambio en Git, el cluster se actualizará por sí solo. Por otro lado, el hecho de tener desactivados el *auto-pruning* y el *self-heal* implica que hay que eliminar los recursos a mano y que se pueden realizar cambios directamente en el cluster.
+
+Las **estrategias C y D** son perpendiculares, y pueden actuar como pasos intermedios hacia la **estrategia E**, que es a la que se debería aspirar. En esta última, todo está automatizado en ambas direcciones. Los cambios en Git se reflejan automáticamente en el cluster (incluyendo el borrado de recursos), y los cambios manuales en el cluster son descartados al instante. 
+
+<br>
+
+### Gestión de secrets
+
+Uno de los principios de GitOps es el uso de **Git como fuente de verdad** de todo el sistema. Esto implica almacenar en Git todas las partes de la aplicación: la configuración, los manifiestos de Kubernetes, los scripts de las bases de datos, las definiciones del cluster, etc. Sin embargo, aquí entra en juego un problema de seguridad: ¿cómo almacenamos los *secrets* en GitOps? Pues, en estos momentos, no existe ninguna práctica que esté aceptada de forma general en lo que concierne a la gestión de datos sensibles a través de GitOps. Se pueden emplear soluciones externas, como Hashicorp Vault, aunque técnicamente iría en contra de los principios de GitOps.
+
+Si empezamos un nuevo proyecto desde cero, existen varias maneras de almacenar datos confidenciales en Git para que también podamos administrarlos usando los principios de GitOps, y en todas ellas se almacenan los *secrets* de forma encriptada. De este modo, se pueden gestionar los datos con GitOps y manteniendo la confidencialidad. En este proyecto, usaremos el controlador de **Bitnami Sealed Secrets** para cifrar los datos antes de almacenarlos en Git y descifrarlos antes de que pasen a la aplicación.
+
+#### Cómo funcionan los secrets en Kubernetes
+
+
 
 <br>
 
 ## Conclusiones y propuestas adicionales para el proyecto
-
-<br>
-
-## Dificultades encontradas en el proyecto
 
 <br>
 
