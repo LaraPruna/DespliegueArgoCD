@@ -984,6 +984,25 @@ El uso de *secrets* en aplicaciones de Kubernetes es muy sencillo. Al igual que 
 <img src="images/kubesecrets.png" alt="Funcionamiento de los secrets normales" width="600"/>
 </p>
 
+Los *sealed secrets* tienen como base los *secrets* nativos de Kubernetes, es decir, tras encriptarlos o desencriptarlos, se utilizan de la manera usual. El controlador de *sealed secrets* de Bitnami es una **extensión de Kubernetes** que se instala en el cluster y que lleva a cabo una única tarea: convertir los *sealed secrets* (que se pueden almacenar en Git) en simples *secrets* (que se pueden usar en la aplicación).
+
+El controlador se instala mediante un chart de Helm:
+```
+helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+helm repo update
+helm install sealed-secrets-controller sealed-secrets/sealed-secrets
+```
+
+Una vez instalado, se crearán dos claves:
+
+1. Una clave privada, que se usa para descifrar *secrets*.
+2. Una clave pública, que se usa para cifrar *secrets*.
+
+<p align="center">
+<img src="images/sealedsecrets.png" alt="Funcionamiento de los sealed secrets" width="750"/>
+</p>
+
+
 <br>
 
 ## Conclusiones y propuestas adicionales para el proyecto
