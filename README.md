@@ -976,7 +976,13 @@ Si empezamos un nuevo proyecto desde cero, existen varias maneras de almacenar d
 
 #### Cómo funcionan los secrets en Kubernetes
 
+Existen dos tipos de *secrets*: los recursos que creamos en Kubernetes y los "sellados" (*sealed secrets*) introducidos por Bitnami. Los primeros no se encriptan de ninguna manera, y el hecho de codificarlos con base64 no debería contar como una medida de seguridad. Aunque hay formas de encriptar estos *secrets* dentro del cluster, lo que nos interesa es hacerlo fuera, para poder almacenarlos en Git y seguir los principios de GitOps.
 
+El uso de *secrets* en aplicaciones de Kubernetes es muy sencillo. Al igual que con los *ConfigMaps*, podemos montarlos como ficheros en nuestra aplicación o pasarlos como variables de entorno.
+
+<p align="center">
+<img src="images/kubesecrets.png" alt="Funcionamiento de los secrets normales" width="600"/>
+</p>
 
 <br>
 
