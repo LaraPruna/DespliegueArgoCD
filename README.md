@@ -11,6 +11,7 @@
 		3. [Ventajas e inconvenientes de GitOps](#ventajas-e-inconvenientes-de-gitops)
 	2. [ArgoCD](#argocd)
 	3. [Ngrok](#ngrok)
+	4. [Helm](#helm)
 4. [Escenario necesario para la realización del proyecto](#escenario-necesario-para-la-realización-del-proyecto)
 	1. [Instalación de ArgoCD con manifiestos](#instalación-de-argocd-con-manifiestos)
 	2. [Instalación de ArgoCD con Autopilot](#instalación-de-argocd-con-autopilot)
@@ -31,6 +32,7 @@
 	6. [Gestión de secrets](#gestión-de-secrets)
 		1. [Cómo funcionan los secrets en Kubernetes](#cómo-funcionan-los-secrets-en-kubernetes)
 		2. [Encriptar los secrets](#encriptar-los-secrets)
+	7. [Desplegar una aplicación con Helm](#desplegar-una-aplicación-con-helm)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Bibliografía](#bibliografia)
 
@@ -162,6 +164,15 @@ Con ArgoCD no solo podremos desplegar aplicaciones usando **ficheros yaml y json
 En este proyecto también aprenderemos a utilizar ngrok, un **proxy inverso** que nos ofrece una forma segura de acceder a nuestros servicios locales desde cualquier parte del mundo. En este caso, usaremos dicha herramienta para exponer a Internet las aplicaciones de ArgoCD alojadas en Kubernetes, para que los *webhooks* que creemos en nuestros repositorios Git puedan acceder a ellas y activar la sincronización con el cluster automáticamente.
 
 Ngrok funciona de una manera muy rápida y sencilla: una vez instalada la herramienta, basta con ejecutar un único comando en nuestra terminal indicando la URL/IP y el puerto donde tengamos la aplicación, con lo que obtendremos una URL generada dinámicamente y accesible desde Internet. Esta es la que utilizaremos a la hora de generar los webhooks.
+
+<br>
+
+### Helm
+
+Una forma de instalar ArgoCD y de desplegar aplicaciones dentro del mismo es mediante el uso de *charts* de **Helm**. Se trata de una herramienta que permite automatizar la creación, empaquetado, configuración y despliegue de aplicaciones y servicios en clústeres de Kubernetes. Se podría decir que Helm es un gestor de paquetería para Kubernetes. A estos "paquetes"
+se los conoce como *charts*, se almacenan en repositorios y contienen todos los recursos de las aplicaciones ya configuradas y con todas sus versiones. Esto permite agilizar la instalación, actualización y búsqueda de dependencias, así como la configuración de despliegues en Kubernetes, mediante la ejecución de comandos por consola.
+
+Helm no solo facilita la tarea de instalar y configurar aplicaciones en Kubernetes, sino que también automatiza el mantenimiento de manifiestos .yaml de los diferentes recursos empaquetando información en los propios *charts* y mostrándolos en el cluster de Kubernetes. Además, Helm mantiene un control de versiones de cada instalación y modificación de *charts*, con lo cual se puede volver a una versión anterior o actualizar a una posterior mediante comandos sencillos.
 
 <br>
 
@@ -1041,14 +1052,14 @@ stringData:
 
 Para cifrar nuestro *secret* ejecutamos el siguiente comando:
 ```
-kubeseal --controller-name=sealed-secrets-controller --controller-namespace=kube-system --format yaml <bm-secret.yaml> sealed.yaml
+kubeseal --controller-name=sealed-secrets-controller --controller-namespace=kube-system --format yaml < bm-secret.yaml > sealed.yaml
 ```
 
 * **--controller-name**: especificamos el nombre del controlador.
 * **--controller-namespace**: indicamos el espacio de nombre donde se encuentra el controlador.
-* **--format**: indicamos el formato en el que se encuentra nuestro fichero *secret* (yaml o json).
+* **--format**: indicamos el formato en el que se encuentra **nuestro fichero *secret*** (yaml o json).
 * Después, indicamos el nombre de nuestro fichero entre los signos "< >".
-* Por último, escribimos el nombre del fichero de destino.
+* Por último, escribimos el **nombre del fichero de destino**.
 
 Al ejecutar el comando, se creará un nuevo fichero con los valores secretos encriptados:
 ```
@@ -1084,6 +1095,14 @@ Este *secret* ya es parte del cluster, y el controlador lo desencriptará en cua
 
 <br>
 
+### Desplegar una aplicación con Helm
+
+Como hemos explicado al principio de este proyecto, Helm es considerado un gestor de paquetería para Kubernetes. Se puede instalar con Homebrew, Chocolatey, Scoop, GoFish, Snap o, simplemente, descargándonos el [binario](https://github.com/helm/helm/releases/tag/v3.8.2).
+
+
+
+<br>
+
 ## Conclusiones y propuestas adicionales para el proyecto
 
 <br>
@@ -1099,6 +1118,8 @@ ArgoCD. (s. f.). Ingress Configuration - Argo CD - Declarative GitOps CD for Kub
 argoproj-labs. (2022, 7 abril). GitHub - argoproj-labs/argocd-autopilot: Argo-CD Autopilot. GitHub. Recuperado 11 de abril de 2022, de https://github.com/argoproj-labs/argocd-autopilot
 
 bitnami-labs. (2022, 20 abril). GitHub - bitnami-labs/sealed-secrets: A Kubernetes controller and tool for one-way encrypted Secrets. GitHub. Recuperado 23 de abril de 2022, de https://github.com/bitnami-labs/sealed-secrets#installation-from-source
+
+CNCF. (2022, 30 enero). Helm Project Journey Report. Cloud Native Computing Foundation. Recuperado 26 de abril de 2022, de https://www.cncf.io/reports/helm-project-journey-report/
 
 Decoster, J. (2022, 19 febrero). ArgoCD + Minikube + Ngrok + Github Webhook - jerome.decoster. Medium. Recuperado 17 de abril de 2022, de https://medium.com/@jerome.decoster/argocd-minikube-ngrok-github-webhook-3cd0cc15d559
 
