@@ -1093,6 +1093,10 @@ sealedsecret.bitnami.com/mariadb created
 
 Este *secret* ya es parte del cluster, y el controlador lo desencriptará en cuanto la aplicación lo necesite.
 
+<p align="center">
+<img src="images/sealedsecretArgo.png" alt="Sealed secret en ArgoCD" width="750"/>
+</p>
+
 <br>
 
 ### Desplegar una aplicación con Helm
