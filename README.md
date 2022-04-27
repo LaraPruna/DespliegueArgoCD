@@ -33,6 +33,8 @@
 		1. [Cómo funcionan los secrets en Kubernetes](#cómo-funcionan-los-secrets-en-kubernetes)
 		2. [Encriptar los secrets](#encriptar-los-secrets)
 	7. [Desplegar una aplicación con Helm](#desplegar-una-aplicación-con-helm)
+		1. [Mediante interfaz gráfica](#mediante-interfaz-gráfica)
+		2. [Mediante consola](#mediante-consola)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Bibliografía](#bibliografia)
 
@@ -1103,7 +1105,25 @@ Este *secret* ya es parte del cluster, y el controlador lo desencriptará en cua
 
 Como hemos explicado al principio de este proyecto, Helm es considerado un gestor de paquetería para Kubernetes. Se puede instalar con Homebrew, Chocolatey, Scoop, GoFish, Snap o, simplemente, descargándonos el [binario](https://github.com/helm/helm/releases/tag/v3.8.2).
 
+Es importante mencionar que ArgoCD ofrece soporte directo para Helm, y esto significa que podemos conectar con un chart de Helm y ArgoCD se encargará de monitorizarlo en caso de que aparezcan nuevas versiones. En ese momento, el chart de Helm deja de funcionar como tal, puesto que lo que hace ArgoCD es "reproducir" el chart con la plantilla de Helm y los manifiestos de la aplicación.
 
+Después, despliega y monitoriza los componentes de la aplicación hasta que ambos estados sean idénticos. En este punto, la aplicación ya no se reconoce como una de Helm, sino como de ArgoCD. Por lo tanto, si ejecutáramos el comando de Helm para listar las aplicaciones, no nos aparecería la que hemos añadido a ArgoCD, porque ya no se encontrarían los metadatos de Helm.
+
+#### Mediante interfaz gráfica
+
+Desde la interfaz gráfica podríamos desplegar una aplicación de Helm mediante dos procedimientos ligeramente distintos:
+
+1. **Usando un repositorio Git**
+
+En este caso creamos una aplicación tal y como hemos explicado en los anteriores apartados, indicando la URL del repositorio Git donde tengamos nuestra aplicación de Helm.
+
+<p align="center">
+<img src="images/CreateAppHelm1.gif" alt="Creando una aplicación de Helm usando un repositorio Git" width="750"/>
+</p>
+
+<br>
+
+#### Mediante consola
 
 <br>
 
@@ -1124,6 +1144,8 @@ argoproj-labs. (2022, 7 abril). GitHub - argoproj-labs/argocd-autopilot: Argo-CD
 bitnami-labs. (2022, 20 abril). GitHub - bitnami-labs/sealed-secrets: A Kubernetes controller and tool for one-way encrypted Secrets. GitHub. Recuperado 23 de abril de 2022, de https://github.com/bitnami-labs/sealed-secrets#installation-from-source
 
 CNCF. (2022, 30 enero). Helm Project Journey Report. Cloud Native Computing Foundation. Recuperado 26 de abril de 2022, de https://www.cncf.io/reports/helm-project-journey-report/
+
+Codefresh. (2022, 1 abril). Argo CD with Helm Charts: Easy GitOps Application Deployment. Recuperado 27 de abril de 2022, de https://codefresh.io/learn/argo-cd/argo-cd-helm-chart/
 
 Decoster, J. (2022, 19 febrero). ArgoCD + Minikube + Ngrok + Github Webhook - jerome.decoster. Medium. Recuperado 17 de abril de 2022, de https://medium.com/@jerome.decoster/argocd-minikube-ngrok-github-webhook-3cd0cc15d559
 
