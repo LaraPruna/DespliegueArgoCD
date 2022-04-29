@@ -43,7 +43,7 @@
 
 ## Introducción
 
-En este proyecto se documenta la instalación, configuración y uso de ArgoCD para el despliegue manual y automático de diversas aplicaciones, tanto por interfaz gráfica como por línea de comandos, tratando de seguir en la medida de lo posible la metogología de GitOps. También se incluye el empleo de webhooks de GitHub y Ngrok para la sincronización automática de aplicaciones, la encriptación de recursos *secrets* para poder almacenarlos en repositorios Git y el uso de charts de Helm en ArgoCD.
+En este proyecto se documenta la instalación, configuración y uso de ArgoCD para el despliegue manual y automático de diversas aplicaciones, tanto por interfaz gráfica como por línea de comandos, tratando de seguir en la medida de lo posible la metodología de GitOps. También se incluye el empleo de webhooks de GitHub y Ngrok para la sincronización automática de aplicaciones, la encriptación de recursos *secrets* para poder almacenarlos en repositorios Git y el uso de charts de Helm en ArgoCD.
 
 <br>
 
@@ -134,7 +134,7 @@ De esto podemos deducir que GitOps ofrece las siguientes **ventajas**:
 * Una mayor productividad, al reducir el trabajo humano.
 * Una experiencia de desarrollo mejorada, al facilitarle las tareas al desarrollador.
 * Una mayor estabilidad, ya que Git ofrece un registro más completo de todos los cambios realizados.
-* Una mayor fiabilidad, puesto que siempre se puede dar marcha atras con un rollback en el caso de que algo salga mal.
+* Una mayor fiabilidad, puesto que siempre se puede dar marcha atrás con un rollback en el caso de que algo salga mal.
 * Consistencia y estandarización, porque GitOps ofrece un modelo para desarrollar infraestructuras, aplicaciones y cambios adicionales en Kubernetes de principio a fin.
 * Una mayor garantía de seguridad, tanto en la integración de los datos como a la hora de probar la autoría y origen de los mismos.
 
@@ -162,7 +162,7 @@ Este es el proceso básico de despliegue de ArgoCD, pero también cuenta con otr
 * Definición de oleadas y marcos de sincronización (*Sync Waves* y *Sync Windows*, respectivamente)
 * Configuración declarativa de aplicaciones
 
-Argo CD cuenta con una **interfaz gráfica integrada** clara y fácil de administrar, donde se muestra tanto la estructura de la aplicación como estado de la sincronización. Tras desplegarla, ArgoCD irá realizando *pulls* a los repositorios añadidos para comparar el estado de estos con el de los clústeres.
+ArgoCD cuenta con una **interfaz gráfica integrada** clara y fácil de administrar, donde se muestra tanto la estructura de la aplicación como estado de la sincronización. Tras desplegarla, ArgoCD irá realizando *pulls* a los repositorios añadidos para comparar el estado de estos con el de los clústeres.
 
 <p align="center">
 <img src="images/InterfazGrafica.png" alt="Interfaz gráfica de ArgoCD" width="750"/>
@@ -520,7 +520,7 @@ Hecho esto, solo quedaría añadir el dominio a nuestro servidor DNS o realizar 
 <img src="images/PortalArgoCD_dominio.png" alt="Accediendo al portal de ArgoCD con un dominio" width="750"/>
 </p>
 
-Una vez comprobemos que podemos acceder a ArgoCD a través con el Ingress, es recomandable que, por razones de seguridad, creemos **usuarios locales** en lugar de utilizar el usuario `admin` que se nos proporciona al final de la instalación. El uso de usuarios locales nos permite no solo gestionar el acceso de estos de manera independiente, sino también configurar una cuenta API con permisos limitados y generar un token de autenticación con el que el usuario podrá crear proyectos y aplicaciones automáticamente. Para ello, crearemos un recurso *ConfigMap* para cada usuario con el siguiente contenido:
+Una vez comprobemos que podemos acceder a ArgoCD a través con el *Ingress*, es recomendable que, por razones de seguridad, creemos **usuarios locales** en lugar de utilizar el usuario `admin` que se nos proporciona al final de la instalación. El uso de usuarios locales nos permite no solo gestionar el acceso de estos de manera independiente, sino también configurar una cuenta API con permisos limitados y generar un token de autenticación con el que el usuario podrá crear proyectos y aplicaciones automáticamente. Para ello, crearemos un recurso *ConfigMap* para cada usuario con el siguiente contenido:
 ```
 apiVersion: v1
 kind: ConfigMap
@@ -630,7 +630,7 @@ En ArgoCD se puede crear una aplicación mediante la interfaz gráfica, por lín
 
 #### Por interfaz gráfica
 
-En primer lugar, iniciamos sesión en ArgoCD con el nuevo usuario que nos hemos creado. Después, pulsamos en el bótón **+ NEW APP** y rellenamos los siguientes campos:
+En primer lugar, iniciamos sesión en ArgoCD con el nuevo usuario que nos hemos creado. Después, pulsamos en el botón **+ NEW APP** y rellenamos los siguientes campos:
 
 **GENERAL**:
 
@@ -778,7 +778,7 @@ Aquí bastará con ejecutar un único comando, en el que introduciremos como arg
 argocd app sync app1
 ```
 
-Para comprobar que se han creado los recursos, ejecutamos el siguiente comando (si se ha realizado la sincronización correctamente, los pods de la aplicación aparecerán con el estado *Runnning*):
+Para comprobar que se han creado los recursos, ejecutamos el siguiente comando (si se ha realizado la sincronización correctamente, los pods de la aplicación aparecerán con el estado *Running*):
 ```
 ~$ kubectl get all
 NAME                        READY   STATUS    RESTARTS   AGE
@@ -805,7 +805,7 @@ ID  DATE                            REVISION
 
 ### Sincronizar una aplicación automáticamente
 
-En el apartado anterior hemos visto cómo sincronizar una aplicación manualmente a través de la interfaz grafica y de la consola. Sin embargo, también podemos configurarla de tal manera que sea ArgoCD el que se encargue sincronizarla automáticamente. Por defecto, la **reconciliación** se realizará cada 3 minutos, momento en el que ArgoCD llevará a cabo las siguientes tareas:
+En el apartado anterior hemos visto cómo sincronizar una aplicación manualmente a través de la interfaz gráfica y de la consola. Sin embargo, también podemos configurarla de tal manera que sea ArgoCD el que se encargue sincronizarla automáticamente. Por defecto, la **reconciliación** se realizará cada 3 minutos, momento en el que ArgoCD llevará a cabo las siguientes tareas:
 
 1. Recopilar todas las aplicaciones configuradas para que se sincronicen automáticamente.
 2. Buscar el último estado de los repositorios Git correspondientes.
@@ -848,7 +848,7 @@ Desde el repositorio de nuestra aplicación en GitHub, nos dirigimos a la pesta�
 
 #### Configurar el secret del webhook en ArgoCD
 
-La configuración de un *secret* compartido a la hora de crear un *webhook* es **opcional**. ArgoCD actualizará igualmente las aplicaciones relacionadas con el repositorio Git independientemente de que tengan activado o no un control de acceso. El uso del *secret* se recomienda especialmente si Argo CD es accesible públicamente, para evitar sufrir un ataque DDoS. Por lo demás, no habría peligro en saltarnos este paso, puesto que lo único que se consigue con los *webhooks* es actualizar la aplicación (cosa que ya hace ArgoCD cada tres minutos).
+La configuración de un *secret* compartido a la hora de crear un *webhook* es **opcional**. ArgoCD actualizará igualmente las aplicaciones relacionadas con el repositorio Git independientemente de que tengan activado o no un control de acceso. El uso del *secret* se recomienda especialmente si ArgoCD es accesible públicamente, para evitar sufrir un ataque DDoS. Por lo demás, no habría peligro en saltarnos este paso, puesto que lo único que se consigue con los *webhooks* es actualizar la aplicación (cosa que ya hace ArgoCD cada tres minutos).
 
 En el caso de que hayamos añadido un *secret*, editaríamos el recurso "argocd-secret" en Kubernetes:
 ```
@@ -1045,7 +1045,7 @@ Kubeseal utiliza la clave pública creada durante el proceso de instalación par
 1. Kubeseal necesita tener acceso al cluster para cifrar los *secrets*.
 2. Los *secrets* encriptados solo se pueden emplear en el cluster en el que se llevó a cabo el proceso de cifrado.
 
-A la hora de cifrar los *secrets* también se tiene en cuenta en espacio de nombre en el que se encuentra el cluster, por lo que se puede afirmar que los *secrets* son **específicos para cada cluster y espacio de nombre**. Si quisieramos usar el mismo *secret* para diferentes clústeres, tendríamos que encriptarlos por cada uno de ellos.
+A la hora de cifrar los *secrets* también se tiene en cuenta en espacio de nombre en el que se encuentra el cluster, por lo que se puede afirmar que los *secrets* son **específicos para cada cluster y espacio de nombre**. Si quisiéramos usar el mismo *secret* para diferentes clústeres, tendríamos que encriptarlos por cada uno de ellos.
 
 En mi caso, tengo el siguiente secret en formato yaml:
 ```
