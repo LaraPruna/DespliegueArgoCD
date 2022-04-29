@@ -35,6 +35,7 @@
 	7. [Desplegar una aplicación con Helm](#desplegar-una-aplicación-con-helm)
 		1. [Mediante interfaz gráfica](#mediante-interfaz-gráfica)
 		2. [Mediante consola](#mediante-consola)
+		3. [Mediante manifiestos](#mediante-manifiestos)
 6. [Conclusiones y propuestas adicionales para el proyecto](#conclusiones-y-propuestas-adicionales-para-el-proyecto)
 7. [Bibliografía](#bibliografia)
 
@@ -42,9 +43,19 @@
 
 ## Introducción
 
+En este proyecto se documenta la instalación, configuración y uso de ArgoCD para el despliegue manual y automático de diversas aplicaciones, tanto por interfaz gráfica como por línea de comandos, tratando de seguir en la medida de lo posible la metogología de GitOps. También se incluye el empleo de webhooks de GitHub y Ngrok para la sincronización automática de aplicaciones, la encriptación de recursos *secrets* para poder almacenarlos en repositorios Git y el uso de charts de Helm en ArgoCD.
+
 <br>
 
 ## Objetivos del proyecto
+
+Los resultados que espero obtener al finalizar el proyecto son:
+
+* Aprender a usar la herramienta ArgoCD, tanto por consola como por interfaz gráfica.
+* Automatizar el despliegue de una aplicación web con cada cambio realizado en el repositorio usando webhooks y ngrok junto con ArgoCD.
+* Lograr una mayor comprensión de la herramienta Helm combinándola con ArgoCD.
+* Monitorizar el estado de la aplicación mediante ArgoCD.
+* Mantener en todo momento la filosofía de GitOps sin comprometer datos sensibles de las aplicaciones.
 
 <br>
 
@@ -1121,13 +1132,89 @@ En este caso creamos una aplicación tal y como hemos explicado en los anteriore
 <img src="images/CreateAppHelm1.gif" alt="Creando una aplicación de Helm usando un repositorio Git" width="750"/>
 </p>
 
+2. **Usando un repositorio de Helm**
+
+Repetimos el proceso, pero esta vez seleccionando "Helm" en el menú desplegable junto a la URL del repositorio. Podremos observar que el campo "Path" pasa a ser "Chart", y junto a este podremos escoger la versión que mejor se ajuste a nuestras necesidades.
+
+<p align="center">
+<img src="images/CreateAppHelm2.gif" alt="Creando una aplicación de Helm usando un repositorio Helm" width="750"/>
+</p>
+
 <br>
 
 #### Mediante consola
 
+Por línea de comandos desplegaríamos la aplicación de forma similar:
+
+1. **Usando un repositorio Git**:
+```
+argocd app create guestbook \
+--project default \
+--repo https://github.com/LaraPruna/argocd-example-apps \
+--path "./helm-guestbook/" \
+--sync-policy auto \
+--dest-namespace default \
+--dest-server https://kubernetes.default.svc \
+--auto-prune \
+--self-heal
+```
+
+2. **Usando un repositorio de Helm**:
+```
+argocd app create wordpress \
+--project default \
+--repo https://charts.bitnami.com/bitnami \
+--helm-chart "wordpress" \
+--revision "14.0.4" \
+--sync-policy auto \
+--dest-namespace default \
+--dest-server https://kubernetes.default.svc \
+--auto-prune \
+--self-heal
+```
+
+<br>
+
+#### Mediante manifiestos
+
+Por último, también podemos crear un manifiesto en yaml y aplicarlo directamente en el cluster de Kubernetes para registrarlo en ArgoCD, aunque este procedimiento no es recomendable si se está siguiendo la metodología de GitOps. A continuación, podemos ver un ejemplo con un chart de Helm de Joomla:
+```
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: joomla-app
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    chart: joomla
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 13.0.1
+    helm:
+      releaseName: joomla
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+Con el siguiente comando, lo aplicamos en el cluster de Kubernetes:
+```
+kubectl apply -f helm-joomla.yaml
+```
+
 <br>
 
 ## Conclusiones y propuestas adicionales para el proyecto
+
+A lo largo del proyecto hemos podido ver la gran utilidad de ArgoCD, que nos permite no solo desplegar aplicaciones de manera automática y eficiente, sino también monitorizar en todo momento el estado de estas, obteniendo al mismo información sobre cada uno de los recursos de Kubernetes que las componen. Además, si empleamos esta herramienta siguiendo la metodología GitOps, aumentaremos la productividad y la estabilidad de nuestras aplicaciones, al reducir la carga de trabajo y concentrar todos los ficheros de configuración en un mismo sitio. Gracias a la herramienta de Sealed Secrets de Bitnami (y otras, como Hashicorp Vault), también podremos mantener la integridad y confidencialidad de los datos sensibles. En resumen, ArgoCD es una herramienta totalmente recomendable para todo aquel dedicado a la creación y mantenimiento de aplicaciones en la nube.
+
+Hay que tener en cuenta que lo explicado en este proyecto no es sino la punta del iceberg, pues ArgoCD ofrece muchas más funciones y servicios de los que hemos visto. Entre estos, podemos encontrarnos el despliegue de aplicaciones con Kustomize, el uso de recursos *Ingress* de forma segura (es decir, utilizando SSL, TLS, CRD, etc.; ArgoCD ofrece amplias opciones a este respecto), y el controlador de Kubernetes **Argo Rollouts**, para la entrega progresiva de aplicaciones (despliegue de aplicaciones de forma gradual).
 
 <br>
 
