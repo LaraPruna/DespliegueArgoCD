@@ -1234,6 +1234,8 @@ CNCF. (2022, 30 enero). Helm Project Journey Report. Cloud Native Computing Foun
 
 Codefresh. (2022, 1 abril). Argo CD with Helm Charts: Easy GitOps Application Deployment. Recuperado 27 de abril de 2022, de https://codefresh.io/learn/argo-cd/argo-cd-helm-chart/
 
+Codefresh University. (s. f.). GitOps Fundamentals. Recuperado 13 de mayo de 2022, de https://codefresh.learnworlds.com/course/gitops-with-argo
+
 Decoster, J. (2022, 19 febrero). ArgoCD + Minikube + Ngrok + Github Webhook - jerome.decoster. Medium. Recuperado 17 de abril de 2022, de https://medium.com/@jerome.decoster/argocd-minikube-ngrok-github-webhook-3cd0cc15d559
 
 Dubey, A. (2022, 20 enero). All About ArgoCD, A Beginner’s Guide. DEV Community. Recuperado 2 de abril de 2022, de https://dev.to/abhinavd26/all-about-argocd-a-beginners-guide-33c9Jerez, Á. G. (2020, 29 mayo).
